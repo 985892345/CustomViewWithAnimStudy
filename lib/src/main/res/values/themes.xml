@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="MyAppTheme" parent="Theme.MaterialComponents">
+
+        <!--在主题里面设置 CardView 的属性，
+        这个属性如果给 activity 设置，就是给该 activity 下全部 CardView 设置
+        如果给 application 设置，就是给应用全局设置
+        这个属性为什么能生效，是因为 CardView 构造函数中写了 R.attr.cardViewStyle-->
+        <item name="cardViewStyle">@style/myCardView_style</item>
+    </style>
+</resources>

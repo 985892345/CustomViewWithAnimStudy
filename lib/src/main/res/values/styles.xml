@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="myCardView_style">
+        <item name="cardBackgroundColor">@android:color/darker_gray</item>
+        <item name="cardCornerRadius">8dp</item>
+    </style>
+
+    <style name="myFrameLayout_style">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">@android:color/black</item>
+    </style>
+
+    <style name="mySection3View_defaultAttrs">
+        <item name="android:background">@android:color/black</item>
+    </style>
+
+</resources>

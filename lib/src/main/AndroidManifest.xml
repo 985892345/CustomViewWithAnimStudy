@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.ndhzs.lib">
+
+    <application>
+        <activity
+            android:name=".section3.test.TestActivity"
+            android:theme="@style/MyAppTheme"
+            android:exported="false" />
+        <activity
+            android:name=".section2.ViewClassifyActivity"
+            android:exported="false" />
+    </application>
+
+</manifest>
