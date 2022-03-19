@@ -1,5 +1,7 @@
 [TOC]
 
+***由于采用 Typora 书写，github 不支持部分格式，建议 clone 后用 Typora 观看***
+
 # 自定义View与动画
 
 ## 一、自定义View
@@ -8,13 +10,13 @@
 
 > 一句话：官方的控件满足不了产品想要的效果 (
 >
-> 但其实，官方控件已经能满足绝大多数需求了，正常情况下自定义 View 是下下策，因为造自定义 View 的轮子是一件很耗时也很好精力的事。
+> 但其实，官方控件已经能满足绝大多数需求了，正常情况下自定义 View 是下下策，因为造自定义 View 的轮子是一件很耗时也很耗精力的事。
 >
 > 这里分享一下我大一暑假时遇到的事情，当时共 5 个组分开做积分商城，产品给了一个积分商城的设计图，其中主页有一个上滑展开的需求，我们组（我和钟智），我就负责做这个上滑的界面。当时我花了好像 3、4 天的时间去设计一个自定义 View（原谅我当时还不知道协调者布局这个东西），结果啊，产品改需求了，靠
 >
 > 经过上面的这个故事后，相信大家应该理解到了选择自定义 View 会面临的风险
 >
-> 后来我花了接近一周的时间还是用自定义 View 写出了上滑的需求，限于当时我的能力，现在去看当时写的代码，存在一些耦合的地方，算是给以后学弟留坑了😁
+> 后来我又花了接近一周的时间还是用自定义 View 写出了产品的新需求，限于当时我的能力，现在去看当时写的代码，存在一些耦合的地方，算是给以后学弟留坑了😁
 >
 > OK，回到这里，自定义 View 确实是下下策，不止会影响你的心情，如果你的代码设计得不好的话（比如耦合度很高，代码逻辑混乱），还会影响以后维护代码人的心情。（说个笑话：听说代码写得越烂，越不容易被辞退 :）
 
@@ -29,11 +31,11 @@
 >   > 指直接或间接继承于 View 的控件，如：TextView、Button
 >   >
 >   > ```java
->   > public class TextView extends View
+>   > public class TextView extends View {}
 >   > ```
 >   >
 >   > ```java
->   > public class Button extends TextView
+>   > public class Button extends TextView {}
 >   > ```
 >   >
 >   > 
@@ -41,11 +43,11 @@
 > - 自定义 ViewGroup
 >
 >   > ```java
->   > public class LinearLayout extends ViewGroup
+>   > public class LinearLayout extends ViewGroup {}
 >   > ```
 >   >
 >   > ```java
->   > public class FrameLayout extends ViewGroup
+>   > public class FrameLayout extends ViewGroup {}
 >   > ```
 >
 > 
@@ -66,7 +68,7 @@
 >   >
 >   > 为什么要列出绘制？
 >   >
->   > 因为很多动画都是依靠重写绘制来实现的
+>   > 因为很多动画都是依靠重写绘制来实现的，所以绘制也比较重要
 >
 > - 事件分发
 >
@@ -280,7 +282,7 @@
 > > 然后在代码中这样使用：
 > >
 > > ```kotlin
-> > val frameLayout = FrameLayout(this, null, 0, R.style.myFrameLayout)
+> > val frameLayout = FrameLayout(this, null, 0, R.style.myFrameLayout_style)
 > > ```
 > >
 > > 当你不能在 xml 中申明，只能在代码中动态生成时，就可以使用这种写法，有个优点就是使用 `style.xml` 可以进行属性的复用，但一般都用不到复用，这时候就可以使用 LayoutParams 和调用对应方法来代替：
@@ -386,7 +388,7 @@
 > > >
 > > >原因：`defStyleAttr` 是从 theme 中读取默认值，但如果我们只能动态生成 View，又需要多次用到一些属性，在 Android 5.0 之前要么每次都手动调用方法来设置，要么写在 theme 中，但这样未免麻烦了些，在 Android 5.0 后增加了这个 `defStyleRes` 参数，就可以直接把属性写在 `style.xml` 中，方便复用
 > > >
-> > >**但这里有很重要的一点：**使用 `defStyleRes ` 时不能设置 `defStyleAttr`，给 `defStyleAttr` 填入 0 或者 theme 中不设置对应的属性即可
+> > >**但这里有很重要的一点：**使用 `defStyleRes` 时不能设置 `defStyleAttr`，给 `defStyleAttr` 填入 0 或者 theme 中不设置对应的属性即可
 > >
 > > 回到这里，前面 java 的写法确实感觉有些臃肿了，我们来看看 kt 的写法：
 > >
@@ -453,7 +455,7 @@
 > </resources>
 > ```
 >
-> **但是，**这个是不分控件的给全部 View 设置属性，一般不会使用到它，在设置整个应用的主题色时会用到
+> **但是，**这个是不分控件的给全部 View 设置属性，一般不会使用到它，只有设置整个应用的主题时会用到
 >
 > 比如你可以试试把这几个属性改一下，就会发现应用的标题栏颜色从紫色改成了你设置的颜色
 >
@@ -466,11 +468,11 @@
 > <item name="colorOnSecondary">@color/black</item>
 > ```
 >
-> 这些属性对应了某种具体的颜色，可以看看这篇博客：https://blog.csdn.net/smartzzg/article/details/104788412
+> 这些属性对应了某种具体位置的颜色，可以看看这篇博客：https://blog.csdn.net/smartzzg/article/details/104788412
 >
 > ### 五种属性定义方法的顺序
 >
-> > 我们讲了有 5 种不同的属性定义，他们存在一个顺序：
+> > 我们讲了有 5 种不同的属性定义，如果定义了相同属性，他们存在一个优先级顺序：
 > >
 > > [1、直接写在 XML 中](#1、直接写在 XML 中)
 > >
@@ -486,7 +488,7 @@
 >
 > **到这里 View 的四个构造函数基本分析完毕了，接下来我们开始讲解里面的方法**
 
-### 3、onDraw()
+### 4、onDraw()
 
 > 
 
@@ -504,8 +506,24 @@
 
 ### 11、*ViewRootImpl
 
-### 12、如何发布库？
+### 12、发布开源库
 
 ### 13、分享一些东西
+
+> 谁想写自定义 View 啊，你想写吗？正经人写什么自定义 View。
+>
+> 自定义 View 确实很难，东西又多又杂，在考虑写自定义 View 之前，请先搜索一下是否有别人已经造好的轮子，有轮子直接用，他不香吗？[狗头]
+>
+> 这里分享一些轮子：
+>
+> ### 1、Material Design 官网
+>
+> > 官网链接：https://material.io/
+> >
+> > 源码地址：https://github.com/material-components/material-components-android
+> >
+> > 示例下载：https://github.com/material-components/material-components-android/releases
+> >
+> > 这里面的都算官方控件，而且有很多，如果想实现某个功能时可以去看看是否已经有实现了的，他还专门写了一个实例 app，可以下下来看看，找到想要的再去看他的源码
 
 ## 二、动画

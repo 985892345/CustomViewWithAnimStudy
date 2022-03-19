@@ -12,7 +12,7 @@ class TestActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.layout_card0)
 
-        FrameLayout(this, null, 0, R.style.myCardView_style)
+        FrameLayout(this, null, 0, R.style.myFrameLayout_style)
 
         val frameLayout = FrameLayout(this)
         frameLayout.layoutParams = ViewGroup.LayoutParams(
