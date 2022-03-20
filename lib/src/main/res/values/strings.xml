@@ -1,1 +1,4 @@
-<resources></resources>
+<resources>
+    <bool name="a">true</bool>
+    <fraction name="b">50%</fraction>
+</resources>

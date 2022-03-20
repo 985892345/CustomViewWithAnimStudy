@@ -87,31 +87,34 @@
 > View 一共有四个构造函数
 >
 > ```java
-> // 这个用于在代码中直接 new 一个 View
-> public View(Context context)
->     
-> // 这个用于在 xml 中书写，系统自动将你写在 xml 中的属性装换为 AttributeSet 类，然后调用这个函数
-> public View(
->     Context context, 
->     @Nullable AttributeSet attrs
-> )
+> public class View {
+>  // 这个用于在代码中直接 new 一个 View，这个 context 一般都是 activity，代表上下文
+>  public View(Context context)
 > 
-> // 这个一般用于设置默认属性，使用的情况较少
-> // 系统不会主动调用，一般是开发者自己设置
-> public View(
->     Context context, 
->     @Nullable AttributeSet attrs, 
->     int defStyleAttr
-> )
+>  // 这个用于在 xml 中书写，系统自动将你写在 xml 中的属性装换为一个 AttributeSet 对象，然后调用这个函数
+>  public View(
+>   Context context, 
+>   @Nullable AttributeSet attrs
+>  )
 > 
-> // 这个与上面的类似，也是设置默认属性，使用的情况很少，且只支持 Android 5.0 以上
-> // 系统不会主动调用
-> public View(
->     Context context, 
->     @Nullable AttributeSet attrs, 
->     int defStyleAttr, 
->     int defStyleRes
-> )
+>  // 这个一般用于设置默认属性，使用的情况较少
+>  // 系统不会主动调用，一般是开发者自己设置
+>  public View(
+>   Context context, 
+>   @Nullable AttributeSet attrs, 
+>   int defStyleAttr
+>  )
+> 
+>  // 这个与上面的类似，也是设置默认属性，使用的情况也较少，且只支持 Android 5.0 以上
+>  // 系统不会主动调用
+>  public View(
+>   Context context, 
+>   @Nullable AttributeSet attrs, 
+>   int defStyleAttr, 
+>   int defStyleRes
+>  )
+> }
+> 
 > ```
 >
 > 前面两个构造函数各位应该都能看懂，关键在于后面两个，他们与设置默认属性相关，在讲解前我们先得知道一个 View 可以通过哪些方式设置属性
@@ -120,10 +123,10 @@
 >
 > > ```xml
 > > <androidx.cardview.widget.CardView
-> >     android:layout_width="200dp"
-> >     android:layout_height="200dp"
-> >     app:cardBackgroundColor="@android:color/darker_gray"
-> >     app:cardCornerRadius="8dp"/>
+> >  android:layout_width="200dp"
+> >  android:layout_height="200dp"
+> >  app:cardBackgroundColor="@android:color/darker_gray"
+> >  app:cardCornerRadius="8dp"/>
 > > ```
 > >
 > > 这样就会给当前 View 设置属性
@@ -490,11 +493,619 @@
 
 ### 4、onDraw()
 
+> 该方法是用于绘图时的一个回调
+>
+> ```kotlin
+> override fun onDraw(canvas: Canvas?) {
+> super.onDraw(canvas)
+> }
+> ```
+>
+> > 这里讲一个小技巧：可以把 `Canvas?` 中的 `?` 为去掉
+> >
+> > 因为在 kt 重写 `onDraw()` 方法时，源代码 java 层中并没有给参数 `canvas` 加上 `@NonNull`，导致 kt 不知道它会不会为空，但我们作为开发者肯定是知道它不会为空的，所以去掉 `?`，可以减少后续的判断，不然很可能写出这样的代码
+> >
+> > ```kotlin
+> > override fun onDraw(canvas: Canvas?) {
+> >     super.onDraw(canvas)
+> >     canvas?.drawRect(0F, 0F, 100F, 200F, mBlackPaint)
+> >     canvas?.drawRect(0F, 0F, 100F, 200F, mBlackPaint)
+> >     canvas?.drawRect(0F, 0F, 100F, 200F, mBlackPaint)
+> >     canvas?.drawRect(0F, 0F, 100F, 200F, mBlackPaint)
+> >     canvas?.drawRect(0F, 0F, 100F, 200F, mBlackPaint)
+> >     canvas?.drawRect(0F, 0F, 100F, 200F, mBlackPaint)
+> > }
+> > ```
+> >
+> > 看着好像没得什么问题，不就多打了一个 `?` 吗？
+> >
+> > 确实看着没有什么问题，但你把 kt 转成 java，你就会发现：
+> >
+> > ```java
+> > protected void onDraw(@Nullable Canvas canvas) {
+> >    super.onDraw(canvas);
+> >    if (canvas != null) {
+> >       canvas.drawRect(0.0F, 0.0F, 100.0F, 200.0F, this.mBlackPaint);
+> >    }
+> >    if (canvas != null) {
+> >       canvas.drawRect(0.0F, 0.0F, 100.0F, 200.0F, this.mBlackPaint);
+> >    }
+> >    if (canvas != null) {
+> >       canvas.drawRect(0.0F, 0.0F, 100.0F, 200.0F, this.mBlackPaint);
+> >    }
+> >    if (canvas != null) {
+> >       canvas.drawRect(0.0F, 0.0F, 100.0F, 200.0F, this.mBlackPaint);
+> >    }
+> >    if (canvas != null) {
+> >       canvas.drawRect(0.0F, 0.0F, 100.0F, 200.0F, this.mBlackPaint);
+> >    }
+> >    if (canvas != null) {
+> >       canvas.drawRect(0.0F, 0.0F, 100.0F, 200.0F, this.mBlackPaint);
+> >    }
+> > }
+> > ```
+> >
+> > 每个 canvas 都单独判断了一遍是否为空，不知道你们怎么想，但我的强迫症不允许出现这种情况，所以建议各位写自定义 View 时，把方法参数中可以去掉 `?` 的顺手给去掉
+> >
+> > 除了 `onDraw()` 以外，还有 `override fun onTouchEvent(event: MotionEvent?)` 的 `?` 也可以去掉
+> >
+> > > 怎么看 kt 转成的 java 代码？
+> > >
+> > >  <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320161207313.png" alt="image-20220320161207313" style="zoom:50%;" />
+> > >
+> > >  <img src="C:/Users/%E9%83%AD%E7%A5%A5%E7%91%9E/AppData/Roaming/Typora/typora-user-images/image-20220320144121673.png" alt="image-20220320144121673" style="zoom:50%;" />
+> >
+> > 接下来我们开始讲解 `onDraw()` 需要的其他知识
+>
+> ### 1、Canvas 画布
+>
+> >由于时间原因，这里不会讲得很详细，你们可以在这些地方进行学习：
+> >
+> >- https://carsonho.blog.csdn.net/article/details/60598775
+> >- https://qijian.blog.csdn.net/article/details/50995268
+> >
+> >
+> >| 参数   | 类型   | 作用                                                         |
+> >| ------ | ------ | ------------------------------------------------------------ |
+> >| canvas | Canvas | 字面翻译是“帆布”，你可以看成是底层给了你一张“画布”（canvas），然后你在这张画布上进行绘图 |
+> >
+> >那怎么进行画图呢？
+> >
+> >```kotlin
+> >// 这个 paint 你可以把它看成是“画笔”，后面会单独讲解
+> >private val mBlackPaint = Paint().apply {
+> >color = Color.BLACK // 设置画笔颜色为黑色
+> >}
+> >override fun onDraw(canvas: Canvas) {
+> >super.onDraw(canvas)
+> >// 画一个 (0, 0) - (100, 200) 的黑色矩形
+> >canvas.drawRect(0F, 0F, 100F, 200F, mBlackPaint)
+> >}
+> >```
+> >
+> >如上面代码，调用 `canvas.drawRect()` 就可以画一个黑色矩形在 View 里面
+> >
+> >接下来，我们看一下效果：
+> >
+> ><img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320144833039.png" alt="image-20220320144833039" style="zoom:50%;float:left" />
+> >
+> >如果你没有自定义 View 基础的话，可能会觉得有些奇怪
+> >
+> >我们从小学开始学的坐标系第一象限不是向上为 Y 正半轴，向右为 X 正半轴，那么按照惯性思维，(0, 0) - (100, 200) 为什么不是下图这样的？
+> >
+> ><img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320144833039.png" alt="image-20220320144833039" style="zoom:50%;transform:rotateX(180deg);float:left" />
+> >
+> >其实原因在于 View 中坐标系的 y 轴是反过来的，我猜测是因为：为了设配手机的特点，比如我们看一些列表，都是手指往上滑动，查看下面的内容，所以为了好开发，View 中的坐标原点就设置在了左上角，向下为 Y 正半轴，向右为 X 正半轴
+> >
+> >这个算是基础内容了，如果不知道的话，可以去看看这篇文章：https://blog.csdn.net/carson_ho/article/details/56009827
+> >
+> >Canvas 里面不止有绘制矩形的方法，还有绘制圆的方法，绘制文字的方法······，这里不会去讲解这些基础内容，可以去下面这些地方去查看：
+> >
+> >- https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/graphics/Canvas?hl=en
+>
+> ### 2、Paint 画笔
+>
+> > 前面的代码演示中出现了 `Paint`，这个类主要是管画笔的，除了设置颜色以外，他还可以设置线的粗细等，这里给出文章，你们有时间自己去看看吧，那本自定义黑书对于 Paint 的内容有点少，建议去看书作者写的文章，里面有很多其他用法
+> >
+> > - https://qijian.blog.csdn.net/article/details/50995268
+>
+> ### 3、Path 路径
+>
+> > Path 路径有很多功能，比如绘制曲线，绘制不规则的图形等，这里你进行讲解，给出下面文章：
+> >
+> > - https://carsonho.blog.csdn.net/article/details/60597923
+> > - https://qijian.blog.csdn.net/article/details/50995268
+>
+> ### 其他东西
+>
+> > 上面并没有列完基础知识，因为基础知识实在是太多了，这里是写不下的，接下来我讲一些其他经验性的东西
+> >
+> > ### 1、onDraw() 里面禁止 new 对象
+> >
+> > > 很多初学者在刚开始写的时候很喜欢在 `onDraw()` 里面 new 对象，之前 `canvas.drawRect()` 不是要传入一个画笔吗？就会有人这样写
+> > >
+> > > ```kotlin
+> > > override fun onDraw(canvas: Canvas) {
+> > >     super.onDraw(canvas)
+> > >     val blackPaint = Paint()
+> > >     blackPaint.color = Color.BLACK
+> > >     canvas.drawRect(0F, 0F, 100F, 200F, blackPaint)
+> > > }
+> > > ```
+> > >
+> > > 这样写时 AS 还会报一个黄，告诉你这样写是不对的，但你知道为什么不对吗？
+> > >
+> > > 原因：`onDraw()` 在一直刷新视图时，在 60 帧的手机上会每隔 16 毫秒回调一次，90 帧的手机上每隔 11 毫秒回调一次（1000 ÷ 90），所以在一秒钟，60 帧的手机会生成 60 个 Paint 对象，90 帧手机生成 90 个对象，这样疯狂 new 对象，会让手机出现卡顿，这跟上节课讲的 `onBindViewHolder()` 不要写点击监听一样，但这个会比它更严重
+> > >
+> > > 但 AS 的智能提示并不是能发现所有的问题，比如下面这样：
+> > >
+> > > ```kotlin
+> > > override fun onDraw(canvas: Canvas) {
+> > >     super.onDraw(canvas)
+> > >     set { 
+> > >         // ...
+> > >     }
+> > > }
+> > > 
+> > > private fun set(func: () -> Unit) {
+> > >     func.invoke()
+> > > }
+> > > ```
+> > >
+> > > 这种情况较难发现，这样写每次都会生成一个匿名内部类，建议加上 `inline` 关键字
+> >
+> > ### 2、不要在 onDraw() 里面进行耗时操作
+> >
+> > > 原因跟上面一样
+> >
+> > ### 3、不要持有 canvas 对象
+> >
+> > > 每次回调的 canvas 对象并不是一定是同一个（大部分情况下是同一个），而且每次的回调只能表示当前帧的状态，比如我们来个违规操作：
+> > >
+> > > ```kotlin
+> > > override fun onDraw(canvas: Canvas) {
+> > >     super.onDraw(canvas)
+> > >     // 开一个线程模拟持有 canvas 对象
+> > >     thread {
+> > >         // 延迟 20 毫秒才绘图
+> > >         sleep(20)
+> > >         canvas.drawRect(0F, 0F, 100F, 200F, mBlackPaint)
+> > >     }
+> > > }
+> > > ```
+> > >
+> > > 你可能猜都猜不到它把图绘制到哪里去了
+> > >
+> > >  
+> > >
+> > >  
+> > >
+> > >  
+> > >
+> > >  
+> > >
+> > >  
+> > >
+> > >  
+> > >
+> > >  
+> > >
+> > >  
+> > >
+> > >  
+> > >
+> > >  
+> > >
+> > > <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320163052101.png" alt="image-20220320163052101" style="zoom:50%;float:left" />
+> > >
+> > > 好家伙，它竟然把图绘制到标题栏上了，这里猜测原因如下（没有去查看源码找真正原因）：
+> > >
+> > > - 整个应用共用了同一个 canvas 对象
+> > > - 因开启线程 sleep，所以 canvas 是整个应用绘制完成后再调用的 `canvas.drawRect()`
+> > > - 标题栏是在最后进行绘制的，此时的 canvas 的坐标系是以标题栏为准的
+> > >
+> > > 这怎么验证呢？
+> > >
+> > > > 你把开发者模式模式的 `显示布局边界` 给打开，你会看到下面这种图：
+> > > >
+> > > > <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320164459116.png" alt="image-20220320164459116" style="zoom: 67%;float:left" />
+> > > >
+> > > > 这里说明标题栏的文字是一个 View 来显示的
+> > > >
+> > > > 那我们试试把标题栏给去掉会发生什么？
+> > > >
+> > > > ```xml
+> > > > <!--theme.xml-->
+> > > > <style name="xxx" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+> > > > ```
+> > > >
+> > > > <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320164844556.png" alt="image-20220320164844556" style="zoom: 67%;float:left" />
+> > > >
+> > > > 嘿，去掉标题栏后绘制的位置对了，所以这里我提出猜测：标题栏是在最后进行绘制的
+> > > >
+> > > > 其实我们可以验证一下这个猜测，写一个在它后面绘制的 View 验证下：
+> > > >
+> > > > ```xml
+> > > > <com.ndhzs.lib.section4.MySection4ViewCanvas
+> > > >     android:layout_width="300dp"
+> > > >     android:layout_height="300dp"
+> > > >     app:layout_constraintBottom_toBottomOf="parent"
+> > > >     app:layout_constraintLeft_toLeftOf="parent"
+> > > >     app:layout_constraintRight_toRightOf="parent"
+> > > >     app:layout_constraintTop_toTopOf="parent" />
+> > > > 
+> > > > <View
+> > > >     android:layout_width="match_parent"
+> > > >     android:layout_height="match_parent"/>
+> > > > ```
+> > > >
+> > > > <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320165148269.png" alt="image-20220320165148269" style="zoom: 67%;float:left" />
+> > > >
+> > > > 果然，我的猜测应该是合理的
+> >
+> > ### 4、自定义 View 和 ViewGroup 在绘制中的不同
+> >
+> > > 在自定义 ViewGroup 中，一般不会重写 `onDraw()`，因为 ViewGroup 对 `onDraw()` 进行了处理，只有在有背景图时，才会调用 `onDraw()`，所以在自定义 ViewGroup 时想绘图一般是重写 `dispatchDraw(Canvas canvas)`，这个方法也可以决定是绘制在子 View 上层还是子 View 下层，具体的你们自己去实践一下吧，这里给出文章链接：https://www.jianshu.com/p/89efaf8bd3dd
+>
+> ### onDraw() 的绘制流程
+>
+> > 这东西属于高阶内容，限于时间关系，这里我就不讲了，可以看看这些文章：
+> >
+> > - https://blog.csdn.net/carson_ho/article/details/56011153
+> > - https://github.com/Idtk/Blog/blob/master/Blog/9%E3%80%81Invalidate.md
+>
+>   
+
+### 5、invalidate()
+
+> 这东西你目前只需要记住以下几点就可以了：
+>
+> - 调用后会在下一帧回调 `onDraw()` 进行刷新
+> - 下一帧是指下一次屏幕刷新的时候
+>
+> 如果你想探究源码的话，我只能丢文章出来了：
+>
+> - https://juejin.cn/post/7017452765672636446
+>
+> OK，这个方法讲完了，因为往深了讲，会涉及到 Handler 机制、ViewRootImpl 等 Framwork 层源码
+>
+> 哦，想起了，还要一点，除了 `invalidate()` 外还有一个 `postInvalidate()` 用于在其他线程里刷新
+>
+> END
+
+### 6、自定义属性 AttributeSet
+
+> 前面我们提到系统会把你 xml 中写得属性装换为一个 AttributeSet 对象，那我们怎么自定义自己的属性呢？
+>
+> 首先，需要新建一个 `res/value/attrs.xml` 文件，比如我想要自定义一个圆半径的属性
+>
+> ```xml
+> <resources>
+>     <!--这个 name 是 View 的类名-->
+>     <declare-styleable name="MySection6View">
+>         <!--这个 name 是自定义属性的名称，formate 是接受的类型-->
+>         <attr name="my6_circleRadius" format="dimension"/>
+>     </declare-styleable>
+> </resources>
+> ```
+>
+> 如上述代码，这里有需要注意的一点：
+>
+> - 自定义属性的名称不能与官方的重复，而且建议加上前缀，与官方的进行区分，比如我就加上了 `my6_`
+>
+> `formate` 有下面几种类型：
+>
+> | 类型            | 说明     | 用法                          |                                        |
+> | --------------- | -------- | ----------------------------- | -------------------------------------- |
+> | ***dimension*** | 长度值   | "1dp"、"1px"、"@dimen/xxx"    | 这里无所谓 dp、px，系统会最终装换成 px |
+> | ***reference*** | 引用值   | "@drawable/xxx"、"@style/xxx" |                                        |
+> | ***color***     | 颜色值   | "#FFFFFFFF"、"@color/xxx"     |                                        |
+> | ***float***     | 小数     | "1.0"                         |                                        |
+> | ***boolean***   | 布尔类型 | "true"、"@bool/xxx"           |                                        |
+> | ***interger***  | 整数     | "1"、"@interget/xxx"          |                                        |
+> | ***string***    | 字符串   | "string"、"@string/xxx"       |                                        |
+> | ***fraction***  | 百分数   | "50%"、"@fraction/xxx"        |                                        |
+> | ***enum***      | 枚举     | [看下文](#enum)               |                                        |
+> | ***flag***      | 位运算   | [看下文](#flag)               |                                        |
+>
+> ### enum
+>
+> > ```xml
+> > <!--比如我设置圆的位置属性-->
+> > <attr name="my6_circleGravity" format="enum">
+> >     <enum name="left" value="0"/>
+> >     <enum name="center" value="1"/>
+> >     <enum name="right" value="2"/>
+> > </attr>
+> > ```
+> >
+> > <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320195658810.png" alt="image-20220320195658810" style="zoom:50%;float:left" />
+> >
+> > 设置后在使用时它的属性就只能选择你填写的那几个
+>
+> ### flag
+>
+> > 就是进行位运算，这里我们以 FrameLayout 的 `layout_gravity` 为例
+> >
+> > ```xml
+> > <attr name="layout_gravity">
+> >     <!--0011 0000-->
+> >     <flag name="top" value="0x30" />
+> >     <!--0101 0000-->
+> >     <flag name="bottom" value="0x50" />
+> >     <!--0000 0011-->
+> >     <flag name="left" value="0x03" />
+> >     <!--0000 0101-->
+> >     <flag name="right" value="0x05" />
+> >     <!--0001 0000-->
+> >     <flag name="center_vertical" value="0x10" />
+> >     <!--0000 0001-->
+> >     <flag name="center_horizontal" value="0x01" />
+> >     <!--0001 0001-->
+> >     <flag name="center" value="0x11" />
+> >     <flag name="start" value="0x00800003" />
+> >     <flag name="end" value="0x00800005" />
+> > </attr>
+> > ```
+> >
+> > 你是否还记得你曾经这样使用过？
+> >
+> > ```xml
+> > <FrameLayout
+> >     android:layout_width="match_parent"
+> >     android:layout_height="match_parent">
+> > 
+> >     <View
+> >         android:layout_width="match_parent"
+> >         android:layout_height="match_parent"
+> >         android:layout_gravity="top|left"/>
+> > 
+> > </FrameLayout>
+> > ```
+> >
+> > > 这里你会发现它把 `top|left` 报黄了，原因在于它推荐你使用 `start` 去代替 `left`，因为在部分国家是从右边往左边阅读文字的，所以，Android 为了国际化，就设计出了 `start` 代替 `left`，`end` 代替 `right`
+>
+> ### 类型的混用
+>
+> > 比如 `android:layout_width` 是这样定义的：
+> >
+> > ```xml
+> > <attr name="layout_width" format="dimension">
+> >     <enum name="fill_parent" value="-1" />
+> >     <enum name="match_parent" value="-1" />
+> >     <enum name="wrap_content" value="-2" />
+> > </attr>
+> > ```
+> >
+> > 
+> >
+> > 还有 `android:background` 是这样定义的：
+> >
+> > ```xml
+> > <attr name="background" format="reference|color" />
+> > ```
+> >
+> > 所以你传入 `@drawable/xxx` 和 `#FFFFFFFF`，它都可以获取，只是填入颜色值时使用 `TypedValue#getDrawable()` 得到是 ColorDrawable
+> >
+> > 
+> >
+> > 也支持这样混用：
+> >
+> > ```xml
+> > <!--这是 View 的一个属性-->
+> > <attr name="focusable" format="boolean|enum">
+> >     <enum name="auto" value="0x00000010" />
+> > </attr>
+> > ```
+> >
+> > 但这样使用只能手动去判断：
+> >
+> > ```java
+> > private int getFocusableAttribute(TypedArray attributes) {
+> >     TypedValue val = new TypedValue();
+> >     if (attributes.getValue(com.android.internal.R.styleable.View_focusable, val)) {
+> >         if (val.type == TypedValue.TYPE_INT_BOOLEAN) {
+> >             return (val.data == 0 ? NOT_FOCUSABLE : FOCUSABLE);
+> >         } else {
+> >             return val.data;
+> >         }
+> >     } else {
+> >         return FOCUSABLE_AUTO;
+> >     }
+> > }
+> > ```
+>
+> 前面讲了类型的定义，那我们怎么获取这些属性呢？
+>
+> ```kotlin
+> private var mCircleRadius = 100
+> // 这个 enum 属性更建议使用枚举来保存，官方通常使用的注解，但 kt 很怪，注解不起作用
+> private var mCircleGravity = 0
+> init {
+>     if (attrs != null) {
+>         val ty = context.obtainStyledAttributes(attrs, R.styleable.MySection6View)
+>         mCircleRadius = ty.getDimensionPixelSize(
+>             R.styleable.MySection6View_my6_circleRadius,
+>             mCircleRadius
+>         )
+>         mCircleGravity = ty.getInt(
+>             R.styleable.MySection6View_my6_circleGravity,
+>             mCircleGravity
+>         )
+>         ty.recycle()
+>     }
+> }
+> ```
+>
+> 这里还好只有两个属性，但如果有多达上百个属性这样写未免太占行数了，所以，秉持着少些代码，我使用了 kt 扩展函数来优化（下面是我写的课表自定义 View）：
+>
+> ```kotlin
+> // 先把属性的读取单独提取到一个类中
+> open class NetLayout @JvmOverloads constructor(
+>     context: Context,
+>     attrs: AttributeSet? = null,
+>     defStyleAttr: Int = R.attr.netLayoutStyle,
+>     defStyleRes: Int = 0
+> ) : ViewGroup(context, attrs, defStyleAttr, defStyleRes), INetLayout {
+>     // 属性值
+>     protected val mNetAttrs: NetLayoutAttrs = NetLayoutAttrs.newInstance(this, attrs)
+> }
+> ```
+>
+> ````kotlin
+> // 我把属性单独写在了一个类里面
+> open class NetLayoutAttrs(
+>     rowCount: Int,
+>     columnCount: Int
+> ) : BaseViewAttrs {
 > 
-
-### 5、自定义属性AttributeSet
-
-### 6、invalidate()
+>     var rowCount = rowCount
+>         internal set
+>     var columnCount = columnCount
+>         internal set
+> 
+>     companion object {
+>         fun newInstance(
+>             view: View,
+>             attrs: AttributeSet?,
+>             defStyleAttr: Int = 0,
+>             defStyleRes: Int = 0,
+>         ): NetLayoutAttrs {
+>             return newAttrs(
+>                 view,
+>                 attrs,
+>                 R.styleable.NetLayout,
+>                 defStyleAttr,
+>                 defStyleRes
+>             ) {
+>                 // 这里你就会看到直接使用 R.styleable.xxx 来获取属性，这样写起来舒服多了
+>                 NetLayoutAttrs(
+>                     R.styleable.NetLayout_net_rowCount.int(ROW_COUNT),
+>                     R.styleable.NetLayout_net_columnCount.int(COLUMN_COUNT)
+>                 )
+>             }
+>         }
+> 
+>         const val ROW_COUNT = 4
+>         const val COLUMN_COUNT = 4
+>     }
+> }
+> ````
+>
+> ```kotlin
+> // 这是定义扩展函数的接口
+> internal interface BaseViewAttrs {
+> 
+>     fun <T> newAttrs(
+>         view: View,
+>         attrs: AttributeSet?,
+>         @StyleableRes
+>         styleableId: IntArray,
+>         defStyleAttr: Int = 0,
+>         defStyleRes: Int = 0,
+>         func: Typedef.() -> T
+>     ): T = BaseViewAttrs.newAttrs(view, attrs, styleableId, defStyleAttr, defStyleRes, func)
+> 
+>     companion object {
+>         fun <T> newAttrs(
+>             view: View,
+>             attrs: AttributeSet?,
+>             @StyleableRes
+>             styleableId: IntArray,
+>             defStyleAttr: Int = 0,
+>             defStyleRes: Int = 0,
+>             func: Typedef.() -> T
+>         ): T {
+>             val ty = view.context.obtainStyledAttributes(attrs, styleableId, defStyleAttr, defStyleRes)
+>             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+>                 // 这是保存在 Debug 模式中能看到的信息，具体怎么查看，你可以去看看这个方法的源码
+>                 view.saveAttributeDataForStyleable(
+>                     view.context, styleableId, attrs, ty, defStyleAttr, defStyleRes)
+>             }
+>             try {
+>                 return Typedef(ty, view.context).func()
+>             } finally {
+>                 ty.recycle()
+>             }
+>         }
+>     }
+> 
+>     class Typedef(val ty: TypedArray, private val context: Context) {
+>         fun Int.int(defValue: Int): Int = this.int(ty, defValue)
+>         fun Int.color(defValue: Int): Int = this.color(ty, defValue)
+>         fun Int.colorById(@ColorRes defValueId: Int): Int = this.color(
+>             ContextCompat.getColor(context, defValueId))
+>         fun Int.dimens(defValue: Int): Int = this.dimens(ty, defValue)
+>         fun Int.dimens(defValue: Float): Float = this.dimens(ty, defValue)
+>         fun Int.layoutDimens(defValue: Int): Int = this.layoutDimens(ty, defValue)
+>         fun Int.dimensById(@DimenRes defValueId: Int): Int = this
+>         .dimens(context.resources.getDimensionPixelSize(defValueId))
+>         fun Int.string(defValue: String? = null): String = this.string(ty, defValue)
+>         fun Int.boolean(defValue: Boolean): Boolean = this.boolean(ty, defValue)
+>         fun Int.float(defValue: Float): Float = this.float(ty, defValue)
+>         internal inline fun <reified E: RuntimeException> Int.intOrThrow(
+>             attrsName: String): Int = this.intOrThrow<E>(ty, attrsName)
+>         internal inline fun <reified E: RuntimeException> Int.stringOrThrow(
+>             attrsName: String): String = this.stringOrThrow<E>(ty, attrsName)
+>     }
+> }
+> 
+> internal fun Int.int(ty: TypedArray, defValue: Int): Int {
+>     return ty.getInt(this, defValue)
+> }
+> 
+> internal fun Int.color(ty: TypedArray, defValue: Int): Int {
+>     return ty.getColor(this, defValue)
+> }
+> 
+> internal fun Int.dimens(ty: TypedArray, defValue: Int): Int {
+>     return ty.getDimensionPixelSize(this, defValue)
+> }
+> 
+> internal fun Int.dimens(ty: TypedArray, defValue: Float): Float {
+>     return ty.getDimension(this, defValue)
+> }
+> 
+> internal fun Int.layoutDimens(ty: TypedArray, defValue: Int): Int {
+>     return ty.getLayoutDimension(this, defValue)
+> }
+> 
+> internal fun Int.string(ty: TypedArray, defValue: String? = null): String {
+>     return ty.getString(this) ?: defValue ?: ""
+> }
+> 
+> internal fun Int.boolean(ty: TypedArray, defValue: Boolean): Boolean {
+>     return ty.getBoolean(this, defValue)
+> }
+> 
+> internal fun Int.float(ty: TypedArray, defValue: Float): Float {
+>     return ty.getFloat(this, defValue)
+> }
+> 
+> internal inline fun <reified E: RuntimeException> Int.intOrThrow(
+>     ty: TypedArray, attrsName: String
+> ): Int {
+>     if (!ty.hasValue(this)) {
+>         throw E::class.java.getConstructor(String::class.java)
+>             .newInstance("属性 $attrsName 没有被定义！")
+>     }
+>     return this.int(ty, 0)
+> }
+> 
+> internal inline fun <reified E: java.lang.RuntimeException> Int.stringOrThrow(
+>     ty: TypedArray, attrsName: String
+> ): String {
+>     if (!ty.hasValue(this)) {
+>         throw E::class.java.getConstructor(String::class.java)
+>             .newInstance("属性 $attrsName 没有被定义！")
+>     }
+>     return this.string(ty)
+> }
+> ```
+> 
+> 
+>
+> 
 
 ### 7、onMeasure()
 
@@ -504,11 +1115,16 @@
 
 ### 10、requestLayout()
 
-### 11、*ViewRootImpl
+> 这东西跟前面的 `invalidate()` 一样，你们只需要记住以下几点：
+>
+> - 调用后会在下一帧回调 `onMeasure()` 和 `onMeasure()` 进行重新测量和布局
+> - 如果你的 View 大小发生改变，它还会调用 `onDraw()` 进行刷新
+>
+> 文章的话，与 `invalidate()` 的一样：https://juejin.cn/post/7017452765672636446
 
-### 12、发布开源库
+### 11、发布开源库
 
-### 13、分享一些东西
+### 12、分享一些东西
 
 > 谁想写自定义 View 啊，你想写吗？正经人写什么自定义 View。
 >
@@ -525,5 +1141,15 @@
 > > 示例下载：https://github.com/material-components/material-components-android/releases
 > >
 > > 这里面的都算官方控件，而且有很多，如果想实现某个功能时可以去看看是否已经有实现了的，他还专门写了一个实例 app，可以下下来看看，找到想要的再去看他的源码
+>
+> ### 2、View#post()、posyDelay()
+>
+> ### 3、View 的生命周期
+>
+> > 生命周期
+> >
+> > 如何监听 View 被 remove
+>
+> ### 4、自定义 View 的一些规范
 
 ## 二、动画

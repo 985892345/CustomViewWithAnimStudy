@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <attr name="mySection3View_attrs" format="reference"/>
+
+    <declare-styleable name="MySection6View">
+        <attr name="my6_circleRadius" format="dimension"/>
+        <attr name="my6_circleGravity" format="enum">
+            <enum name="left" value="0"/>
+            <enum name="center" value="1"/>
+            <enum name="right" value="2"/>
+        </attr>
+        <attr name="my6_flag" format="flags">
+            <flag name="a" value="0x01"/>
+            <flag name="b" value="0x02"/>
+        </attr>
+        <attr name="my6_stringWithInt" format="string|integer"/>
+    </declare-styleable>
 </resources>
