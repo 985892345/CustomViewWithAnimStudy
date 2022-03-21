@@ -6,20 +6,33 @@
 
     <FrameLayout
         android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="top|left" />
+
+    </FrameLayout>
+
+    <com.ndhzs.lib.section6.MySection6View
+        android:id="@+id/mySection6View"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:my6_flag="a|b" />
+
+    <com.ndhzs.lib.section6.MySection6ViewGroup
+        android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <View
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_gravity="top|left"/>
+            app:my6VG_layout_position="1"/>
 
-    </FrameLayout>
-
-    <com.ndhzs.lib.section6.MySection6View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background=""
-        app:my6_flag="a|b"
-        />
+    </com.ndhzs.lib.section6.MySection6ViewGroup>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@android:color/holo_orange_light"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!--这个 View 全部设置成具体值-->
+        <View
+            android:layout_width="300dp"
+            android:layout_height="600dp"
+            android:background="@android:color/holo_green_light"/>
+
+        <!--单独用一个 View 是检测不出问题的，
+        因为 View 没有默认的 wrap_content 值-->
+        <!--<View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/black"/>-->
+
+        <!--设置了 wrap_content 的 View -->
+        <com.ndhzs.lib.section7.MySection7FlTestView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/holo_blue_light" />
+        <!--你会看到它的宽度并没有填满 FrameLayout-->
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

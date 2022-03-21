@@ -15,4 +15,9 @@
         </attr>
         <attr name="my6_stringWithInt" format="string|integer"/>
     </declare-styleable>
+
+
+    <declare-styleable name="MySection6ViewGroup_Layout">
+        <attr name="my6VG_layout_position" format="integer"/>
+    </declare-styleable>
 </resources>
