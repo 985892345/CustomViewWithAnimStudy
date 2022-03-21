@@ -1523,7 +1523,7 @@
 >
 > 
 
-##### 2、NestedScroll 嵌套 Rv 复用被取消
+##### 2、NestedScroll 嵌套 Rv 复用失效
 
 > 接下来开始做火箭
 >
@@ -1535,7 +1535,263 @@
 >
 > ##### 首先从 NestedScrollView 的 onMeasure() 开始 debug
 >
-> 。。。。。。
+> > ![image-20220321225743926](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321225743926.png)
+> >
+> > 可以发现 NestedScrollView 把测量直接交给了父类 FrameLayout 处理，（你可能会疑惑，不重写 `onMeasure()` 那 NestedScrollView 是怎么不一样的测量的？这个问题在下面会讲解）
+> >
+> > 又由于 `mFillViewport` 为 false，就直接 return 了，至于 `mFillViewport` 是什么我们后面会讲解
+>
+> ##### 来到 FrameLayout 的 onMeasure() 实现
+>
+> > ![image-20220321230004519](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321230004519.png)
+> >
+> > 这里只有一个 View，就是 Rv，然后 FrameLayout 调用了 `measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0)`，这个函数被 NestedScrollView 重写了，这就是上面 NestedScrollView 实现不一样测量的原因
+> >
+> > ![image-20220321230432739](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321230432739.png)
+> >
+> > 仔细看红线处，这里它给出的高度竟然直接为 `lp.topMargin + lp.bottomMargin`，可能你不会意识到这个有什么问题，我们来看看 NestedScrollView 的孪生兄弟 ScrollView 对于该方法的实现
+> >
+> > ![image-20220321230936516](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321230936516.png)
+> >
+> > 发现不同了吗，ScrollView 有个 `parentHeightMeasureSpec` 的高度，而 NestedScrollView 只使用了 `lp.topMargin + lp.bottomMargin`，如果子 View 没得 margin 值，那不就直接给子 View 传入的高度为 0 了？
+> >
+> > NestedScrollView 与 ScrollView 在这个方法上的不同，就是造成 Rv 复用失效的直接原因，接下来我们探究一下根本原因
+>
+> ##### 来到 Rv 的 onMeasure
+>
+> > 紧接着上面继续 debug，我们来到了 Rv 的 `onMeasure()` 实现
+> >
+> > ![image-20220321231555746](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321231555746.png)
+> >
+> > 可以发现这里 `heightSpec` 为 0
+>
+> ##### 来到 dispatchLayoutStep2() 方法
+>
+> > ![image-20220321231735164](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321231735164.png)
+> >
+> > 前面那个 `dispatchLayoutStrp1()` 因为不处于 `State.STEP_START` 而跳过了
+>
+> ##### 发现 mLayout.onLayoutChildren()
+>
+> > ![image-20220321232502431](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321232502431.png)
+> >
+> > 整个 `dispatchLayoutChild2()` 一看就只有这个方法是用于布局的，debug 进去试试
+>
+> ##### 探索 onLayoutChild() 方法
+>
+> > ![image-20220321233030377](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321233030377.png)
+> >
+> > 前面有一堆方法，但其实 Rv 是调用这个 `fill()` 来给子 View 布局的
+>
+> ##### 探索 fill()
+>
+> > ![image-20220321233713916](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321233713916.png)
+> >
+> > 这个 while 很重要，就是依靠这个循环来测量子 View 的，虽然你应该看的很懵逼，但请记住这两个东西：
+> >
+> > `layoutState.mInfinite = true` 和 `remainingSpace = 0`，后面的 `layoutState.hasMore(state)` 是用于判断次数是否达到 ItemCount 的，可以不用管
+> >
+> > 这里就直接告诉你结论，就是因为这个 `layoutState.mInfinite = true` 导致它一直执行循环，然后一直到 `layoutState.hasMore(state) = false` 才结束，即把 ItemCount 个 item 都测量完了
+> >
+> > 很懵逼是不是，我们来看看如果使用 ScrollView 包裹运行到这里时会怎么样？
+> >
+> > ![image-20220321234733578](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321234733578.png)
+> >
+> > 看到区别了吧，使用 ScrollView 时会不一样，其中 `layoutState.mInfinite = false` 和 `remainingSpace = 1868` 
+> >
+> > 如果使用 ScrollView 继续往下走
+> >
+> > ![image-20220321234928364](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321234928364.png)
+> >
+> > 他会在这个地方减少 `remainingSpace` 的值，最后就可以使 while 循环提前退出了
+>
+> OK，基本上根本原因找到了，但为什么那个 `layoutState.mInfinite = true` 且 `remainingSpace = 0` 呢？
+>
+> 继续分析
+>
+> ##### 为什么 layoutState.mInfinite = true ?
+>
+> > ![image-20220321235408579](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321235408579.png)
+> >
+> > 重写走下流程，我们可以发现 `mLayoutState.mInfinite` 在这里被赋值
+> >
+> > 点进去看看它赋的什么值
+> >
+> > ![image-20220321235709470](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321235709470.png)
+> >
+> > 第一个 `getMode() == View.MeasureSpec.UNSPECIFIED` 肯定是 `true`，因为外布局是 NestedScrollView 嘛，前面提到了它重写了 FrameLayout 的 `measureChildWithMargins()` 方法，给的子 View 的测量模式就是 `MeasureSpec.UNSPECIFIED` ，第二个判断 `mOrientationHelper.getEnd() == 0` 根据 debug 可以得到值也为 `true`
+> >
+> > 继续跟踪 `mOrientationHelper.getEnd() == 0` 的原因
+> >
+> > ![image-20220322000124439](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322000124439.png)
+> >
+> > 可以发现它直接调用了 `mLayoutManger.getHeight()`，继续
+> >
+> > ![image-20220322000411111](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322000411111.png)
+> >
+> > `mHeight` 被修改的地方如下
+> >
+> > ![image-20220322000630000](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322000630000.png)
+> >
+> > 其中前面两个是 `setRecyclerView()` 是在 Rv 添加 Adapter 时是在的初始值，肯定不是我么我们要找的地方，那只能是 `setMeasureSpecs()` 了
+> >
+> > ![image-20220322000826091](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322000826091.png)
+> >
+> > 这里有一个 `mHeight = 0` 的操作，点击方法名称看看是谁调用了它
+> >
+> > ![image-20220322000941813](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322000941813.png)
+> >
+> > 运气真好，刚好回到了我们之前大的断点前，那只能说明就是在这里调用的，所以 `mHeight = 0`，导致前面的 `mOrientationHelper.getEnd() == 0` 为 `true`，最后导致 `layoutState.mInfinite` 为 `true` 了 
+>
+> ##### 为什么 remainingSpace = 0？
+>
+> > 如果你大胆猜测的话，应该能猜到肯定与 `mHeight` 有关系
+> >
+> > 先来到这里
+> >
+> > ![image-20220322001506870](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322001506870.png)
+> >
+> > 我们可以知道 `remainingSpace` 由 `layoutState.mAvailable + layoutState.mExtraFillSpace` 组成，其中通过查看注释可以知道跟 `layoutState.mExtraFillSpace` 没有关系，那就去寻找 `layoutState.mAvailable` 吧
+> >
+> > 可是 `layoutState.mAvailable` 被改变的地方有点多，不是很好定位，那我们可以试试给这个变量打上断点，重新走一下流程，接下来就是重新 debug 一遍
+> >
+> > ![image-20220322002054498](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322002054498.png)
+> >
+> > 一下子就找到了，不得不说 debug 确实很方便
+> >
+> > 点击去看一下 `mOrientationHelper.getEndAfterPadding()` 方法
+> >
+> > ![image-20220322002252433](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322002252433.png)
+> >
+> > 果然，跟最开始的猜测一样，它与 `mHeight` 有关系
+> >
+> > 那 `updateLayoutStateToFillEnd()` 是在什么时候调用的呢？
+> >
+> > ![image-20220322002424079](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322002424079.png)
+> >
+> > 从调用栈发现原来他在 `fill()` 方法前被调用了
+> >
+> > OK，这下子 NestedScrollView 嵌套 Rv 使复用失效的根本原因和决定性因素都找到了
+>
+> ### 如何解决复用失效问题？
+>
+> 根据上面的流程，我们可以找到下面这几种方法：
+>
+> ##### 重写 NestedScrollView 的 `measureChildWithMargins()` 方法
+>
+> > ```kotlin
+> > /**
+> >  * 重写该方法的几个原因：
+> >  * 1、为了在 UNSPECIFIED 模式下，Rv 也能得到 NestedScrollView 的高度
+> >  * 2、NestedScrollView 与 ScrollView 在对于子 View 高度处理时在下面这个方法不一样, 导致
+> >  *    NestedScrollView 中子 View 必须使用具体的高度, 设置成 wrap_content 或 match_parent
+> >  *    都将无效，具体的可以去看 ScrollView 和 NestedScrollView 中对于这同一方法的源码
+> >  * 3、题外话：在 NestedScrollView 中嵌套 RecyclerView 会使 RecyclerView 的懒加载失效，直接原因就与
+> >  *    这个方法有关，而使用 ScrollView 就不会造成懒加载失效的情况
+> >  * 4、至于为什么 NestedScrollView 与 ScrollView 在该方法不同，我猜测原因是为了兼容以前的 Android 版本，
+> >  *    在 ViewGroup#getChildMeasureSpec() 方法中可以发现使用了
+> >  *    一个静态变量 sUseZeroUnspecifiedMeasureSpec
+> >  *    来判断 UNSPECIFIED 模式下子 View 该得到的大小，但可能设计 NestedScrollView “偷懒”了，
+> >  *    没有加这个东西，具体原因不知
+> >  */
+> > override fun measureChildWithMargins(
+> >     child: View,
+> >     parentWidthMeasureSpec: Int,
+> >     widthUsed: Int,
+> >     parentHeightMeasureSpec: Int,
+> >     heightUsed: Int
+> > ) {
+> >     val lp = child.layoutParams as MarginLayoutParams
+> > 
+> >     val childWidthMeasureSpec = getChildMeasureSpec(
+> >         parentWidthMeasureSpec,
+> >         paddingLeft + paddingRight + lp.leftMargin + lp.rightMargin
+> >                 + widthUsed, lp.width
+> >     )
+> >     val usedTotal = paddingTop + paddingBottom + lp.topMargin + lp.bottomMargin + heightUsed
+> >     val childHeightMeasureSpec: Int = MeasureSpec.makeMeasureSpec(
+> >         max(0, MeasureSpec.getSize(parentHeightMeasureSpec) - usedTotal),
+> >         MeasureSpec.UNSPECIFIED
+> >     )
+> > 
+> >     child.measure(childWidthMeasureSpec, childHeightMeasureSpec)
+> >     // 这里只能使用 measuredHeight
+> >     innerHeight = child.measuredHeight + paddingTop + paddingBottom + lp.topMargin + lp.bottomMargin
+> > }
+> > ```
+>
+> ##### 直接给 Rv 设置固定高度
+>
+> > 这个方法就可以直接修改 `mHeight` 的值，这样就不会得到 0 了
+>
+> ##### 使用 mFillViewport 属性，但需要 NsetedScrollView 的 layout_height = match_parent 或 确定值
+>
+> > 前面在 `onMeasure()` 提到了一个 `mFillViewport` 变量
+> >
+> > 这是它的官方解释：
+> >
+> > > 设置此 ScrollView 是否应拉伸其内容高度以填充视口
+> >
+> > 它对应这个属性：
+> >
+> > ![image-20220322003418726](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322003418726.png)
+> >
+> > 但再次之前我们先看一下，设置为 `true` 后 `onMeasure()` 干了些什么东西
+> >
+> > ```java
+> > @Override
+> > protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+> >     super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+> >     // mFillViewport 为 true 不会被 return 了
+> >     if (!mFillViewport) {
+> >         return;
+> >     }
+> > 
+> >     final int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+> >     if (heightMode == MeasureSpec.UNSPECIFIED) {
+> >         return;
+> >     }
+> > 
+> >     if (getChildCount() > 0) {
+> >         View child = getChildAt(0);
+> >         final NestedScrollView.LayoutParams lp = (LayoutParams) child.getLayoutParams();
+> > 
+> >         int childSize = child.getMeasuredHeight();
+> >         
+> >         // 关键在于这里，得到自身的测量高度
+> >         // 这个测量高度是之前调用 super.onMeasure() 而设置的
+> >         int parentSpace = getMeasuredHeight()
+> >                 - getPaddingTop()
+> >                 - getPaddingBottom()
+> >                 - lp.topMargin
+> >                 - lp.bottomMargin;
+> > 
+> >         if (childSize < parentSpace) {
+> >             int childWidthMeasureSpec = getChildMeasureSpec(widthMeasureSpec,
+> >                     getPaddingLeft() + getPaddingRight() + lp.leftMargin + lp.rightMargin,
+> >                     lp.width);
+> >             // 给子 View 的测量模式使用了 MeasureSpec.EXACTLY
+> >             int childHeightMeasureSpec =
+> >                     MeasureSpec.makeMeasureSpec(parentSpace, MeasureSpec.EXACTLY);
+> >             child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+> >         }
+> >     }
+> > }
+> > ```
+> >
+> > 从上面代码我们可以发现，设置 `mFillViewport = true` 后 NestedScrollView 会使用 MeasureSpec.EXACTLY 模式再次测量子 View，高度使用的是自身的高度
+> >
+> > 而自身的高度只有在 `match_parent` 或者 确定值 时才有用，不让，如果你的 `layout_height` 为 `wrap_content`，那 `NestedScrollView#getMeasuredHeight()` 得到仍然是 Rv 全部测量时的高度，所以这时再测量还是很导致 Rv 复用失效
+> >
+> > **使用 mFillViewport 属性，但需要 NsetedScrollView 的 layout_height = match_parent 或 确定值**
+> >
+> > 但一般都不会使用到这个属性来解决 Rv 复用失效问题，这里只是当个扩展来讲解
+>
+> 
+>
+> OK，`onMeasure()` 基本上就讲完了
+>
+> 
 
 ### 
 
