@@ -824,22 +824,49 @@
 >
 > 但考虑到可能会有其他学长来听课，我还是画一个简单的流程图
 >
-> ```flow
-> view=>start: View
-> invalidate=>operation: 调用 invalidate() 刷新
-> hasParent=>condition: parent != null
-> viewGroup=>operation: 告诉父布局有子布局要重绘
-> noParent=>operation: parent = null，则传递到了 ViewRootImpl (一个管理布局的类)
-> viewRootImpl=>operation: ViewRootImpl 调用 Choreographer 发送一个 post (一个专门监听屏幕刷新的类)
-> callback=>operation: 屏幕刷新了，回调 ViewRootImpl，开始重新走 View 测量和绘图流程
-> foreach=>end: 从顶部布局最后回调到 View 的 onDraw()
-> 
-> view->invalidate->hasParent
-> hasParent(yes)->viewGroup->hasParent
-> hasParent(no)->noParent->viewRootImpl->callback->foreach
+> ```mermaid
+> graph TB
+> id1("View")-->id2
+> id2["调用invalidate()刷新"]-->id3
+> id3{"parent == null"}--不为 null-->id4
+> id4["告诉父布局有子布局要重绘"]-->id3--为 null-->id5
+> id5["传递到了 ViewRootImpl (一个管理布局的类)"]-->id6
+> id6["ViewRootImpl 调用 mChoreographer 发送一个 post (一个专门监听屏幕刷新的类)"]-.->id7
+> id7["屏幕刷新了，回调 ViewRootImpl，开始重新走 View 测量和绘图流程"]-->id8
+> id8("从顶部布局最后回调到 View 的 onDraw()")
 > ```
 >
-> 其实还有很多细节，这里我就不讲述了
+> 其实还有亿点细节，这里我就不讲述了，自己看下面图，其实这图仍有许多没有画上
+>
+> ```mermaid
+> sequenceDiagram
+> View->>View: invalidate()
+> View->>ViewGroup: invalidateChild()
+> alt 如果是硬件加速
+> 	ViewGroup->>other ViewGroups: onDescendantInvalidated()
+> 	other ViewGroups->>DecorView: onDescendantInvalidated()
+> 	DecorView->>ViewRootImpl: onDescendantInvalidated()
+> 	ViewRootImpl->>ViewRootImpl: invalidate()
+> else 如果是软件加速
+> 	ViewGroup->>other ViewGroups: invalidateChildInParent()
+> 	other ViewGroups->>DecorView: invalidateChildInParent()
+> 	DecorView->>ViewRootImpl: invalidateChildInParent()
+> 	ViewRootImpl->>ViewRootImpl: invalidateRectOnScreen()
+> end
+> ViewRootImpl->>ViewRootImpl: scheduleTraversals()
+> ViewRootImpl->>Choreographer: postCallback(mTraversalRunnable)
+> Choreographer->>Handler: sendMessage*()
+> Handler->>Handler: 等到下一次屏幕刷新
+> Handler->>ViewRootImpl: mTraversalRunnable.run()
+> ViewRootImpl->>ViewRootImpl: doTraversal()
+> ViewRootImpl->>ViewRootImpl: performTraversals()
+> ViewRootImpl->>ViewRootImpl: performDraw()
+> ViewRootImpl->>DecorView: draw()
+> DecorView->>other ViewGroups: draw()
+> other ViewGroups->>ViewGroup: draw()
+> ViewGroup->>View: draw()
+> View->>View: onDraw()
+> ```
 >
 > END
 
@@ -1231,8 +1258,8 @@
 >
 > ### 涉及知识
 >
-> - MeasureSpecs
-> - LayoutParams
+> - `MeasureSpecs`
+> - `LayoutParams`
 >
 > ```kotlin
 > // 与上面讲的 onDraw() 一样，也是一个回调，该回调的作用是由 requestLayout() 触发
@@ -1240,6 +1267,21 @@
 >     super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 > }
 > ```
+>
+> ### 主要用法
+>
+> - 调用 `setMeasuredDimension()`，设置自身宽和高
+> - 遍历子 View，再调用 `child.measure()`，设置子 View 的宽和高
+>
+> ```mermaid
+> graph LR
+> id1("ViewRootImpl 开始测量")-->id2
+> id2["ViewGroup#mearsure()"]-->id3
+> id3["ViewGroup#onMeasure()"]-->id4
+> id4["View#measure()"]-->id5("View#onMeasure()")
+> ```
+>
+> 
 
 #### 1、LayoutParams
 
@@ -1250,7 +1292,7 @@
 > ```java
 > // 你会发现这 LayoutParams 很简单
 > public static class LayoutParams extends MarginLayoutParams {
->     /**
+>  /**
 >      * 对应 layout_gravity 属性没有被设置
 >      */
 >     public static final int UNSPECIFIED_GRAVITY = -1;
@@ -1297,7 +1339,43 @@
 > }
 > ```
 >
-> 可能你会觉得很奇怪，
+> 如果要想使用这个 `LayoutParams` 还得重写这几个方法：
+>
+> ```kotlin
+> // 这个是检查 LayoutParams 是否是你想要的 LayoutParams
+> // 注意：这个 LayoutParams 是需要打个 ? 的，因为存在传入一个 null 的情况
+> override fun checkLayoutParams(p: LayoutParams?): Boolean {
+>     // 这是惯用写法
+>     return p is NetLayoutParams
+> }
+> 
+> // 这个是通过 AttributeSet 得到你自己的 LayoutParmas
+> override fun generateLayoutParams(attrs: AttributeSet): LayoutParams {
+>     return NetLayoutParams(context, attrs)
+> }
+> 
+> // 这个是装换 LayoutParms
+> override fun generateLayoutParams(lp: LayoutParams): LayoutParams {
+>     // 这也是惯用写法，注意：要把你 LayoutParams 的所有父类都要写完
+>     return when (lp) {
+>         is NetLayoutParams -> NetLayoutParams(lp)
+>         is MarginLayoutParams -> NetLayoutParams(lp)
+>         else -> NetLayoutParams(lp)
+>     }
+> }
+> 
+> // 这个是得到默认的 LayoutParams
+> override fun generateDefaultLayoutParams(): LayoutParams {
+>     return NetLayoutParams(
+>         NetLayoutParams.UNSET,
+>         NetLayoutParams.UNSET,
+>         NetLayoutParams.UNSET,
+>         NetLayoutParams.UNSET
+>     )
+> }
+> ```
+>
+> 这几个方法会在什么时候被调用，我们会在后面的 [LayoutInflater](#1、LayoutInflater) 讲解
 
 #### 2、MeasureSpecs
 
@@ -1400,6 +1478,8 @@
 >     return MeasureSpec.makeMeasureSpec(resultSize, resultMode);
 > }
 > ```
+>
+> 如果你以后开发自定义 ViewGroup，在给子 View 测量时我更推荐使用该方法，遵循官方的写法可以提高可读性
 
 ##### 1、FrameLayout 的 `onMeasure() 源码分析`
 
@@ -1407,89 +1487,92 @@
 > // 接下来是起飞环节
 > @Override
 > protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
->     int count = getChildCount();
+>  int count = getChildCount();
 > 
->     // 判断自身是否有一边不是具体值，作用如下：
->     // 比如 FrameLayout 的宽是 wrap_content，但其中一个子 View 宽为 match_parent
->     // 那么这个时候 FrameLayout 是不知道该给这个子 View 宽度多少的
->     // 但我们可以通过其他 View 来判断 FrameLayout 能得到的宽度
->     // 这个时候就知道 FraneLayout 宽度值能取多少了
->     final boolean measureMatchParentChildren =
->             MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.EXACTLY ||
->             MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.EXACTLY;
->     // 这个是保存上述所说的那种子 View，用于二次测量
->     mMatchParentChildren.clear(); 
+>  // 判断自身是否有一边不是具体值，作用如下：
+>  // 比如 FrameLayout 的宽是 wrap_content，但其中一个子 View 宽为 match_parent
+>  // 那么这个时候 FrameLayout 是不知道该给这个子 View 宽度多少的
+>  // 但我们可以通过其他 View 来判断 FrameLayout 能得到的宽度
+>  // 这个时候就知道 FraneLayout 宽度值能取多少了
+>  final boolean measureMatchParentChildren =
+>          MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.EXACTLY ||
+>          MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.EXACTLY;
+>  // 这个是保存上述所说的那种子 View，用于二次测量
+>  mMatchParentChildren.clear(); 
 > 
->     int maxHeight = 0;
->     int maxWidth = 0;
->     // 状态值，用来记录子 View 是否得到了想要的大小，用的很少，忽略即可
->     int childState = 0; 
+>  int maxHeight = 0;
+>  int maxWidth = 0;
+>  // 状态值，用来记录子 View 是否得到了想要的大小，用的很少，忽略即可
+>  int childState = 0; 
 > 
->     // 遍历所有子 View
->     for (int i = 0; i < count; i++) {
->         final View child = getChildAt(i);
->         if (mMeasureAllChildren || child.getVisibility() != GONE) {
->             // measureChildWithMargins() 里面调用了测量子 View 的方法
->             // 之后会提到该方法，你只需要知道调用后可以得到子 View 测量的宽和高
->             // 但这个宽和高不是 width 和 height，而是 measuredWidth 和 measuredHeight
->             measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0);
->             // 得到 LayoutParams，主要是从里面取得定义的 Margin 值
->             final LayoutParams lp = (LayoutParams) child.getLayoutParams();
->             // 保存子 View 中最大的宽度
->             maxWidth = Math.max(maxWidth,
->                     child.getMeasuredWidth() + lp.leftMargin + lp.rightMargin);
->             // 保存子 View 中最大的高度
->             maxHeight = Math.max(maxHeight,
->                     child.getMeasuredHeight() + lp.topMargin + lp.bottomMargin);
->             // 状态值，忽略即可，在 ViewRootImpl 中有使用，一般情况下自定义 View 不用
->             childState = combineMeasuredStates(childState, child.getMeasuredState());
->             // 最开始的那个 boolean 值，用来保存是 match_parent 的 View
->             if (measureMatchParentChildren) {
->                 if (lp.width == LayoutParams.MATCH_PARENT ||
->                         lp.height == LayoutParams.MATCH_PARENT) {
->                     mMatchParentChildren.add(child);
->                 }
->             }
->         }
->     }
+>  // 遍历所有子 View
+>  for (int i = 0; i < count; i++) {
+>      final View child = getChildAt(i);
+>      // 这个 mMeasureAllChildren 是一个属性，作用：是否忽略 Gone 的影响
+>      // child.getVisibility() != GONE：Gone 时不测量子 View
+>      // 这个 Gone 时再自己写自定义 View 建议也判断上
+>      if (mMeasureAllChildren || child.getVisibility() != GONE) {
+>          // measureChildWithMargins() 里面调用了测量子 View 的方法
+>          // 之后会提到该方法，你只需要知道调用后可以得到子 View 测量的宽和高
+>          // 但这个宽和高不是 width 和 height，而是 measuredWidth 和 measuredHeight
+>          measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0);
+>          // 得到 LayoutParams，主要是从里面取得定义的 Margin 值
+>          final LayoutParams lp = (LayoutParams) child.getLayoutParams();
+>          // 保存子 View 中最大的宽度
+>          maxWidth = Math.max(maxWidth,
+>                  child.getMeasuredWidth() + lp.leftMargin + lp.rightMargin);
+>          // 保存子 View 中最大的高度
+>          maxHeight = Math.max(maxHeight,
+>                  child.getMeasuredHeight() + lp.topMargin + lp.bottomMargin);
+>          // 状态值，忽略即可，在 ViewRootImpl 中有使用，一般情况下自定义 View 不用
+>          childState = combineMeasuredStates(childState, child.getMeasuredState());
+>          // 最开始的那个 boolean 值，用来保存是 match_parent 的 View
+>          if (measureMatchParentChildren) {
+>              if (lp.width == LayoutParams.MATCH_PARENT ||
+>                      lp.height == LayoutParams.MATCH_PARENT) {
+>                  mMatchParentChildren.add(child);
+>              }
+>          }
+>      }
+>  }
 > 
->     // 最大值加上 padding 值
->     // getPadding*WithForeground() 是内部方法，我们自己用时是使用 getPadding*() 代替
->     maxWidth += getPaddingLeftWithForeground() + getPaddingRightWithForeground();
->     maxHeight += getPaddingTopWithForeground() + getPaddingBottomWithForeground();
+>  // 最大值加上 padding 值
+>  // getPadding*WithForeground() 是内部方法，我们自己用时是使用 getPadding*() 代替
+>  maxWidth += getPaddingLeftWithForeground() + getPaddingRightWithForeground();
+>  maxHeight += getPaddingTopWithForeground() + getPaddingBottomWithForeground();
 > 
->     // 检查最小值的设置
->     // View 都自带了一个 android:minHeight 属性，自己自定义 View 时建议把这个适配一下
->     maxHeight = Math.max(maxHeight, getSuggestedMinimumHeight());
->     maxWidth = Math.max(maxWidth, getSuggestedMinimumWidth());
+>  // 检查最小值的设置
+>  // View 都自带了一个 android:minHeight 属性，自己自定义 View 时建议把这个适配一下
+>  maxHeight = Math.max(maxHeight, getSuggestedMinimumHeight());
+>  maxWidth = Math.max(maxWidth, getSuggestedMinimumWidth());
 > 
->     // 得到前台的背景图，再与最大值比较
->     final Drawable drawable = getForeground();
->     if (drawable != null) {
->         maxHeight = Math.max(maxHeight, drawable.getMinimumHeight());
->         maxWidth = Math.max(maxWidth, drawable.getMinimumWidth());
->     }
+>  // 得到前台的背景图，再与最大值比较
+>  final Drawable drawable = getForeground();
+>  if (drawable != null) {
+>      maxHeight = Math.max(maxHeight, drawable.getMinimumHeight());
+>      maxWidth = Math.max(maxWidth, drawable.getMinimumWidth());
+>  }
 > 
->     // 关键方法，调用 setMeasuredDimension() 设置自身宽和高
->     setMeasuredDimension(resolveSizeAndState(maxWidth, widthMeasureSpec, childState),
->             resolveSizeAndState(maxHeight, heightMeasureSpec,
->                     childState << MEASURED_HEIGHT_STATE_SHIFT));
+>  // 关键方法，调用 setMeasuredDimension() 设置自身宽和高
+>  setMeasuredDimension(resolveSizeAndState(maxWidth, widthMeasureSpec, childState),
+>          resolveSizeAndState(maxHeight, heightMeasureSpec,
+>                  childState << MEASURED_HEIGHT_STATE_SHIFT));
 > 
->     // 在上面那个调用过后，就能得到自身的宽和高了
->     // 然后这里再重写测量为 match_parent 的 View
->     count = mMatchParentChildren.size();
->     // 这个 count 判断我个人感觉有点问题
->     // count 是指为 match_parent View 的数量，
->     // 而如果我只有一个 View 是 match_parent，那它不是就不会重新测量了吗？
->     // 真奇怪，我感觉该用 childCount
->     if (count > 1) {
->         for (int i = 0; i < count; i++) {
->             final View child = mMatchParentChildren.get(i);
->             final MarginLayoutParams lp = (MarginLayoutParams) child.getLayoutParams();
+>  // 在上面那个调用过后，就能得到自身的宽和高了
+>  // 然后这里再重写测量为 match_parent 的 View
+>  count = mMatchParentChildren.size();
+>  // 这个 count 判断我个人感觉有点问题
+>  // count 是指为 match_parent View 的数量，
+>  // 而如果我只有一个 View 是 match_parent，那它不是就不会重新测量了吗？
+>  // 真奇怪，我感觉该用 childCount
+>  if (count > 1) {
+>      for (int i = 0; i < count; i++) {
+>          final View child = mMatchParentChildren.get(i);
+>          final MarginLayoutParams lp = (MarginLayoutParams) child.getLayoutParams();
 > 
->             final int childWidthMeasureSpec;
->             if (lp.width == LayoutParams.MATCH_PARENT) {
->                 final int width = Math.max(0, getMeasuredWidth()
+>          final int childWidthMeasureSpec;
+>          if (lp.width == LayoutParams.MATCH_PARENT) {
+>              final int width = Math.max(0, getMeasuredWidth()
 >                         - getPaddingLeftWithForeground() - getPaddingRightWithForeground()
 >                         - lp.leftMargin - lp.rightMargin);
 >                 childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(
@@ -1514,16 +1597,16 @@
 >                         lp.topMargin + lp.bottomMargin,
 >                         lp.height);
 >             }
-> 
+>             // 这里可以发现 onMeasure() 不止会调用一次，有时候需要调用多次才能测量完成 
 >             child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
 >         }
 >     }
-> }
+> 
 > ```
 >
 > 
 
-##### 2、NestedScroll 嵌套 Rv 复用失效
+##### 2、NestedScrollView 嵌套 Rv 复用失效
 
 > 接下来开始做火箭
 >
@@ -1537,15 +1620,15 @@
 >
 > > ![image-20220321225743926](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321225743926.png)
 > >
-> > 可以发现 NestedScrollView 把测量直接交给了父类 FrameLayout 处理，（你可能会疑惑，不重写 `onMeasure()` 那 NestedScrollView 是怎么不一样的测量的？这个问题在下面会讲解）
+> > 可以发现 NestedScrollView 把测量直接交给了父类 FrameLayout 处理，（你可能会疑惑，不重写 `onMeasure()` 那 NestedScrollView 是怎么实现不同于其他 View 测量的？这个问题在下面会讲解）
 > >
-> > 又由于 `mFillViewport` 为 false，就直接 return 了，至于 `mFillViewport` 是什么我们后面会讲解
+> > 又由于 `mFillViewport` 为 `false`，就直接 return 了，至于 `mFillViewport` 是什么我们后面会讲解
 >
 > ##### 来到 FrameLayout 的 onMeasure() 实现
 >
 > > ![image-20220321230004519](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321230004519.png)
 > >
-> > 这里只有一个 View，就是 Rv，然后 FrameLayout 调用了 `measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0)`，这个函数被 NestedScrollView 重写了，这就是上面 NestedScrollView 实现不一样测量的原因
+> > 这里只有一个 View，就是 Rv，然后 FrameLayout 调用了 `measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0)`，这个函数被 NestedScrollView 重写了，然后给出了一个 `MeasureSpec.UNSPECIFIED`，这就是 NestedScrollView 不同于其他 View 测量的原因
 > >
 > > ![image-20220321230432739](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321230432739.png)
 > >
@@ -1613,13 +1696,13 @@
 >
 > > ![image-20220321235408579](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321235408579.png)
 > >
-> > 重写走下流程，我们可以发现 `mLayoutState.mInfinite` 在这里被赋值
+> > 点击 `layoutState.mInfinite`，我们可以发现 `mLayoutState.mInfinite` 在这里被赋值
 > >
 > > 点进去看看它赋的什么值
 > >
 > > ![image-20220321235709470](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321235709470.png)
 > >
-> > 第一个 `getMode() == View.MeasureSpec.UNSPECIFIED` 肯定是 `true`，因为外布局是 NestedScrollView 嘛，前面提到了它重写了 FrameLayout 的 `measureChildWithMargins()` 方法，给的子 View 的测量模式就是 `MeasureSpec.UNSPECIFIED` ，第二个判断 `mOrientationHelper.getEnd() == 0` 根据 debug 可以得到值也为 `true`
+> > 第一个 `getMode() == View.MeasureSpec.UNSPECIFIED` 肯定是 `true`，因为外布局是 NestedScrollView 嘛，前面提到了它重写了 FrameLayout 的 `measureChildWithMargins()` 方法，给的子 View 的测量模式是 `MeasureSpec.UNSPECIFIED` ，第二个判断 `mOrientationHelper.getEnd() == 0`，根据 debug 可以得到值也为 `true`
 > >
 > > 继续跟踪 `mOrientationHelper.getEnd() == 0` 的原因
 > >
@@ -1633,7 +1716,7 @@
 > >
 > > ![image-20220322000630000](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322000630000.png)
 > >
-> > 其中前面两个是 `setRecyclerView()` 是在 Rv 添加 Adapter 时是在的初始值，肯定不是我么我们要找的地方，那只能是 `setMeasureSpecs()` 了
+> > 其中前面两个是 `setRecyclerView()` 是在 Rv 添加 Adapter 时设置的初始值，肯定不是我们要找的地方，那只能是 `setMeasureSpecs()` 了
 > >
 > > ![image-20220322000826091](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322000826091.png)
 > >
@@ -1677,7 +1760,7 @@
 >
 > 根据上面的流程，我们可以找到下面这几种方法：
 >
-> ##### 重写 NestedScrollView 的 `measureChildWithMargins()` 方法
+> ##### 1、重写 NestedScrollView 的 `measureChildWithMargins()` 方法
 >
 > > ```kotlin
 > > /**
@@ -1686,7 +1769,7 @@
 > >  * 2、NestedScrollView 与 ScrollView 在对于子 View 高度处理时在下面这个方法不一样, 导致
 > >  *    NestedScrollView 中子 View 必须使用具体的高度, 设置成 wrap_content 或 match_parent
 > >  *    都将无效，具体的可以去看 ScrollView 和 NestedScrollView 中对于这同一方法的源码
-> >  * 3、题外话：在 NestedScrollView 中嵌套 RecyclerView 会使 RecyclerView 的懒加载失效，直接原因就与
+> >  * 3、在 NestedScrollView 中嵌套 RecyclerView 会使 RecyclerView 的懒加载失效，直接原因就与
 > >  *    这个方法有关，而使用 ScrollView 就不会造成懒加载失效的情况
 > >  * 4、至于为什么 NestedScrollView 与 ScrollView 在该方法不同，我猜测原因是为了兼容以前的 Android 版本，
 > >  *    在 ViewGroup#getChildMeasureSpec() 方法中可以发现使用了
@@ -1708,6 +1791,7 @@
 > >         paddingLeft + paddingRight + lp.leftMargin + lp.rightMargin
 > >                 + widthUsed, lp.width
 > >     )
+> >     // 这里的写法与 ScrollView 里面的一样
 > >     val usedTotal = paddingTop + paddingBottom + lp.topMargin + lp.bottomMargin + heightUsed
 > >     val childHeightMeasureSpec: Int = MeasureSpec.makeMeasureSpec(
 > >         max(0, MeasureSpec.getSize(parentHeightMeasureSpec) - usedTotal),
@@ -1715,16 +1799,14 @@
 > >     )
 > > 
 > >     child.measure(childWidthMeasureSpec, childHeightMeasureSpec)
-> >     // 这里只能使用 measuredHeight
-> >     innerHeight = child.measuredHeight + paddingTop + paddingBottom + lp.topMargin + lp.bottomMargin
 > > }
 > > ```
 >
-> ##### 直接给 Rv 设置固定高度
+> ##### 2、直接给 Rv 设置固定高度
 >
-> > 这个方法就可以直接修改 `mHeight` 的值，这样就不会得到 0 了
+> > 这个方法就可以直接修改 `mHeight` 的值，从之前的分析中可以得到`layoutState.mInfinite` 和 `remainingSpace` 都与 `mHeight` 有关，所以修改 `mHeight` 就可以从根源上解决复用失效问题
 >
-> ##### 使用 mFillViewport 属性，但需要 NsetedScrollView 的 layout_height = match_parent 或 确定值
+> ##### 3、使用 mFillViewport 属性，但需要 NsetedScrollView 的 layout_height = match_parent 或 确定值
 >
 > > 前面在 `onMeasure()` 提到了一个 `mFillViewport` 变量
 > >
@@ -1779,23 +1861,270 @@
 > > }
 > > ```
 > >
-> > 从上面代码我们可以发现，设置 `mFillViewport = true` 后 NestedScrollView 会使用 MeasureSpec.EXACTLY 模式再次测量子 View，高度使用的是自身的高度
+> > 从上面代码我们可以发现，设置 `mFillViewport = true` 后 NestedScrollView 会使用 `MeasureSpec.EXACTLY` 模式再次测量子 View，高度使用的是自身的高度
 > >
-> > 而自身的高度只有在 `match_parent` 或者 确定值 时才有用，不让，如果你的 `layout_height` 为 `wrap_content`，那 `NestedScrollView#getMeasuredHeight()` 得到仍然是 Rv 全部测量时的高度，所以这时再测量还是很导致 Rv 复用失效
+> > 而自身的高度只有在 `match_parent` 或者 确定值 时才有用，不然，如果你的 `layout_height` 为 `wrap_content`，那 `NestedScrollView#getMeasuredHeight()` 得到仍然是 Rv 全部测量时的高度，所以这时再测量还是会导致 Rv 复用失效
 > >
-> > **使用 mFillViewport 属性，但需要 NsetedScrollView 的 layout_height = match_parent 或 确定值**
+> > 使用 mFillViewport 属性，但需要 NsetedScrollView 的 **layout_height = match_parent 或 确定值**
 > >
 > > 但一般都不会使用到这个属性来解决 Rv 复用失效问题，这里只是当个扩展来讲解
 >
-> 
+> ##### 问题：如果给 Rv 外面再包一层，那复用还会失效吗？
 >
-> OK，`onMeasure()` 基本上就讲完了
->
-> 
+> > 答案：仍然会失效
+> >
+> > 首先，我们知道失效的决定因素是 `mHeight == 0 && mode == MeasureSpec.UNSPECIFIED`，而 NestedScrollView 在子 View 没有设置 Margin 值时给子 View 传入的高度肯定是 0
+> >
+> > ![image-20220321230936516](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321230936516.png)
+> >
+> > 而 `MeasureSpec.UNSPECIFIED` 测量模式具有传递性，前面我们提到 `getChildMeasureSpec()` 方法（[MeasureSpecs](#2、MeasureSpecs)）
+> >
+> > ```java
+> > // 如果测量模式是可任意取值，即一般对应父 View 为 ScrollView
+> > case MeasureSpec.UNSPECIFIED:
+> >     if (childDimension >= 0) {
+> >         // 假设子 View 固定为 100dp
+> >         resultSize = childDimension;
+> >         resultMode = MeasureSpec.EXACTLY;
+> >     } else if (childDimension == LayoutParams.MATCH_PARENT) {
+> >         // 子 View 是 match_parent
+> >         // 这个 sUseZeroUnspecifiedMeasureSpec 变量用于兼容 Android 旧版本
+> >         resultSize = View.sUseZeroUnspecifiedMeasureSpec ? 0 : size;
+> >         resultMode = MeasureSpec.UNSPECIFIED;
+> >     } else if (childDimension == LayoutParams.WRAP_CONTENT) {
+> >         // 子 View 是 wrap_content
+> >         resultSize = View.sUseZeroUnspecifiedMeasureSpec ? 0 : size;
+> >         resultMode = MeasureSpec.UNSPECIFIED;
+> >     }
+> >     break;
+> > ```
+> >
+> > 可以看到除了 `childDimension >= 0` 外其他情况测量模式都是 `MeasureSpec.UNSPECIFIED`，所以你中间夹一层其他布局是解决不了的
 
-### 
+##### 3、Dialog 根布局设置宽高失效
+
+> 这个东西之前在寒假期间讲过，但才发现当时讲的有些小问题：
+>
+> - 只有 DialogFragment 才会使外层布局的所有 `layout_` 属性失效，而 Dialog 则**一般**不会
+>
+> 其实也不是一般不会，主要是 DialogFragment 和 Dialog 在一个方法使用上的不同，所以为什么我最开始给那位学弟讲的<img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220322180055610.png" alt="image-20220322180055610" style="zoom: 50%;" />
+>
+> 原来是我以为 dialog 能设置，那 DialogFragment 也能设置了，原来 DialogFragment 设置是失效的
+>
+> 这里直接先讲原因：
+>
+> DialogFragment 是使用 `setContentView(View view)` 来设置根布局的，而 Dialog 一般使用 `setContentView(int id)` 来设置根布局，这两个方法在底层的调用会有些不同
+>
+> 我们直接从 DialogFragment 开始 debug
+>
+> DialogFragment 是一个 Fragment，里面夹带了一个 dialog，根据 Fragment 常见的写法，先给 `onCreateView()` 打上 debug
+>
+> ![image-20220322175441660](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322175441660.png)
+>
+> debug 进来发现一堆方法，但如果不了解这些东西的话，确实很难知道它把这个返回的 View 拿来干了什么，其实当时我在给那位学弟找这个问题答案的时候找了很久，最后是从 `View#setLayoutParams()` 方法入手，在一堆调用栈中发现了答案。这里为了省时间就直接按正向流程讲一遍吧
+>
+> ![image-20220322180533094](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322180533094.png)
+>
+> 这里它有一个 `LiveData` 通知观察者
+>
+> ![image-20220322180809792](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322180809792.png)
+>
+> DialogFragment 里面对它进行了观察，DialogFragment 是在 `onAttach()` 的时候开始进行观察的，怪不得我按正常流程走了半天也找不到问题 :( 
+>
+> 这里的观察者被通知时调用了 `mDialog.setContentView(view)`，点击它继续往下走
+>
+> ![image-20220322190910124](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322190910124.png)
+>
+> 可以发现这里它直接传入了自己的 LayoutParams，这就是为什么所有 `layout_` 属性全部失效的原因
+>
+> 那普通的 dialog 为什么不会失效呢？
+>
+> 主要原因是 dialog 一般是这样写的：
+>
+> ![image-20220322191150701](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322191150701.png)
+>
+> <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220322191527878.png" alt="image-20220322191527878" style="zoom: 50%;" />
+>
+> 可以看到它调用了
+>
+> ```java
+> mLayoutInflater.inflate(layoutResID, mContentParent);
+> ```
+>
+> 而不是使用的 `setContenView(View view)`
+>
+> 至于 `LayoutInflater` 会在后面进行讲解，这里你只需要知道调用了这个方法后，它会读取 xml 文件，并把 xml 中写的 `layout_` 属性保存在一个 `LayoutParams` 中供父布局使用，所以这就是 DialogFragment 的 `layout_` 属性不会失效的原因，当然，只是一般不会失效，如果你非要在 dialog 中调用 `setContentView(View view)`，那肯定也是一样会失效的
+>
+> ### 解决方案
+>
+> ##### 1、在 DialogFragment 的根布局外面再包一层 FrameLayout
+>
+> > 这样包了一层后就可以让你自己的布局的 `layout_` 在 FrameLayout 下生效，FrameLayout 的 `layout_width`、`layout_height` 任意设置都可以，因为失效了，但我更推荐设置成 `wrap_content`，这样看起来逻辑要好一点
+>
+> ##### 2、通过代码设置宽和高
+>
+> > 可以设置根布局的宽和高
+> >
+> > ```java
+> > // 只有在 onViewCreated() 回调里设置才有效
+> > override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+> >     super.onViewCreated(view, savedInstanceState)
+> >     // density 是 dp / px 的转换率，比如：我的手机转换率是 2.75，则 1dp 对应 2.75px
+> >     val density = requireContext().resources.displayMetrics.density
+> >     val lp = view.layoutParams
+> >     lp.width = (density * 400).toInt()
+> >     lp.height = (density * 300).toInt()
+> >     // 这里只是修改了宽和高，因为 View 还没有被测量布局
+> >     // 所以可以不用调用 view.layoutParams = lp 来刷新，在其他地方使用时是要通过这种方式才能刷新的！
+> > }
+> > ```
+> >
+> > 也可以设置 window 的宽和高
+> >
+> > ```java
+> > // 只有在 onViewCreated() 回调里设置才有效
+> > override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+> >     super.onViewCreated(view, savedInstanceState)
+> >     // density 是 dp / px 的转换率，比如：我的手机转换率是 2.75，则 1dp 对应 2.75px
+> >     val density = requireContext().resources.displayMetrics.density
+> >     dialog?.window?.setLayout(
+> >         (density * 400).toInt(),
+> >         (density * 300).toInt()
+> >     )
+> > }
+> > ```
+> >
+> > 这个 window 其实是 Android 里的 `PhoneWindow`，听名字就知道是一个管理手机窗口的类，调用这个 `setLayout()` 最后会重新给 `DectorView` 设置 `LayoutParams`，`DectorView` 是所有窗口的根布局
+>
+> 上面两种解决方法我更推荐使用第一种，因为在 xml 中定义属性更好修改，不然在代码中修改宽和高，会给以后看代码的人带来疑惑
+>
+> ##### 
+>
+> OK，`onMeasure()` 基本上就讲到这里了
+>
+> 
 
 ### 8、onLayout()
+
+> ### 作用
+>
+> 布局子控件
+>
+> ### 涉及知识
+>
+> - `measureWidth` 与 `meaasureHeigth`
+>
+> ```kotlin
+> /**
+> * 与上面讲的 onDraw() 一样，也是一个回调，该回调的作用是由 requestLayout() 触发
+> * @param changed 与上次布局相比，是否发生改变
+> */
+> override fun onLayout(                                
+>     changed: Boolean,                                 
+>     left: Int, top: Int, right: Int, bottom: Int      
+> ) {                                                   
+>     super.onLayout(changed, left, top, right, bottom) 
+> }                                                     
+> ```
+>
+> ### 主要用法
+>
+> - 遍历子 View，再调用 `child.layout()`，摆放子 View
+>
+> - 一般是 ViewGroup 实现
+>
+>   之前提到了 `TextView` 作为 View 却重写了这个方法，其实它没有干什么，主要是重新设置了文字的位置和大小
+>
+>   为什么需要在这里重写设置呢？
+>
+>   原因：`onLayout()` 一般情况下**只会回调一次**，而且能拿到最终显示的宽度和高度，所以在有特殊需要时可以在这里面来设置一些东西，比如：一些特殊的自定义 ViewGroup 始终是固定的大小，则可以不用重写 `onMeasure()`，而是在 `onLayout()` 中直接布局
+>
+> ```mermaid
+> graph LR
+> id1("ViewRootImpl 开始布局")-->id2
+> id2["ViewGroup#layout()"]-->id3
+> id3["ViewGroup#onLayout()"]-->id4
+> id4["View#layout()"]-->id5("View#onLayout()")
+> ```
+>
+> 
+
+#### 1、measureWidth (measureHeight) 与 width (height)
+
+> `measureWidth` 代表测量的宽度，其实就是 `onMeasure()` 中调用 `setMeasuredDimension()` 设置的宽度
+>
+> `width` 代表布局后的宽度，是由 `layout()` 中摆放后通过 `right - left` 得到的
+>
+> 一般 `measureWidth` 只用于 `layout()` 和 `onLayout()` 中，其他地方不应该使用它
+
+#### 2、FrameLayout 的 onLayout() 源码分析
+
+> ```java
+> @Override
+> protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+>     layoutChildren(left, top, right, bottom, false /* no force left gravity */);
+> }
+> void layoutChildren(int left, int top, int right, int bottom, boolean forceLeftGravity) {
+>     final int count = getChildCount();
+>     // 计算子 View 能绘制的边界
+>     final int parentLeft = getPaddingLeftWithForeground();
+>     final int parentRight = right - left - getPaddingRightWithForeground();
+>     final int parentTop = getPaddingTopWithForeground();
+>     final int parentBottom = bottom - top - getPaddingBottomWithForeground();
+>     for (int i = 0; i < count; i++) {
+>         final View child = getChildAt(i);
+>         // 子 View 为 Gone 时不布局，在自己设计自定义 View 时建议也进行判断
+>         if (child.getVisibility() != GONE) {
+>             // 取出子 View 身上的 LayoutParams
+>             final LayoutParams lp = (LayoutParams) child.getLayoutParams();
+>             // 得到之前测量的宽和高
+>             final int width = child.getMeasuredWidth();
+>             final int height = child.getMeasuredHeight();
+>             int childLeft;
+>             int childTop;
+>             // 前面提到的 FrameLayout#LayoutParams
+>             int gravity = lp.gravity;
+>             if (gravity == -1) {
+>                 gravity = DEFAULT_CHILD_GRAVITY;
+>             }
+>             final int layoutDirection = getLayoutDirection();
+>             final int absoluteGravity = Gravity.getAbsoluteGravity(gravity, layoutDirection);
+>             final int verticalGravity = gravity & Gravity.VERTICAL_GRAVITY_MASK;
+>             // 下面是根据不同的 gravity 来布局，就是一些简单的计算
+>             switch (absoluteGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+>                 case Gravity.CENTER_HORIZONTAL:
+>                     childLeft = parentLeft + (parentRight - parentLeft - width) / 2 +
+>                     lp.leftMargin - lp.rightMargin;
+>                     break;
+>                 case Gravity.RIGHT:
+>                     if (!forceLeftGravity) {
+>                         childLeft = parentRight - width - lp.rightMargin;
+>                         break;
+>                     }
+>                 case Gravity.LEFT:
+>                 default:
+>                     childLeft = parentLeft + lp.leftMargin;
+>             }
+>             switch (verticalGravity) {
+>                 case Gravity.TOP:
+>                     childTop = parentTop + lp.topMargin;
+>                     break;
+>                 case Gravity.CENTER_VERTICAL:
+>                     childTop = parentTop + (parentBottom - parentTop - height) / 2 +
+>                     lp.topMargin - lp.bottomMargin;
+>                     break;
+>                 case Gravity.BOTTOM:
+>                     childTop = parentBottom - height - lp.bottomMargin;
+>                     break;
+>                 default:
+>                     childTop = parentTop + lp.topMargin;
+>             }
+>             // 最后调用 child.layout()
+>             child.layout(childLeft, childTop, childLeft + width, childTop + height);
+>         }
+>     }
+> }
+> ```
 
 ### 9、requestLayout()
 
@@ -1805,24 +2134,128 @@
 > - 如果你的 View 大小发生改变，它还会调用 `onDraw()` 进行刷新
 >
 > 文章的话，与 `invalidate()` 的一样：https://juejin.cn/post/7017452765672636446
+>
+> ```mermaid
+> graph TB
+> id1("View")-->id2
+> id2["调用requestLayout()重新布局"]-->id3
+> id3{"parent == null"}--不为 null-->id4
+> id4["告诉父布局有子布局要重布局"]-->id3--为 null-->id5
+> id5["传递到了 ViewRootImpl (一个管理布局的类)"]-->id6
+> id6["ViewRootImpl 调用 mChoreographer 发送一个 post (一个专门监听屏幕刷新的类)"]-.->id7
+> id7["屏幕刷新了，回调 ViewRootImpl，开始重新走 View 测量和布局流程"]-->id8
+> id8("从顶部布局最后回调到 View 的 onMeasure()、onLayout()")-->id9
+> id9{"如果宽高改变"}--true-->id10("调用 onDraw() 回调")-->id11
+> id9--false-->id11("结束")
+> ```
+>
+> 
+
+
 
 ### 10、setContentView
 
+> debug 走起，最后发现它调用了
+>
+> ![image-20220323223301814](https://gitee.com/guo985892345/typora/raw/master/img/image-20220323223301814.png)
+>
+> 添加布局直接交给了 `LayoutInflater` 处理，那我们讲解一下 `LayoutInflater`
+
 #### 1、LayoutInflater
+
+> `LayoutInflater` 我们常用的就下面这个两个方法
+>
+> ```java
+> public View inflate(@LayoutRes int resource, @Nullable ViewGroup root) {
+>     // 可以看到它直接调用了下面那个三个参数的
+> 	return inflate(resource, root, root != null);
+> }
+> 
+> /**
+>  * @param resource 布局 id
+>  * @param root 父布局
+>  * @param attachToRoot 是否直接添加到父布局，如果为 true，在解析出 View 后会直接添加到 root 中
+>  * @return 如果 attachToRoot 为 true，这返回 root，如果为 false，则返回 xml 中的根布局
+>  */
+> public View inflate(@LayoutRes int resource, @Nullable ViewGroup root, boolean attachToRoot) {}
+> ```
+>
+> 继续往里面走，其中最主要的代码在这里：
+>
+> ![image-20220323224318637](https://gitee.com/guo985892345/typora/raw/master/img/image-20220323224318637.png)
+>
+> 上面那个就是之前留下的问题（[LayoutParams](#1、LayoutParams)），在 `root != null` 通过 `AttributeSet` 得到你自己的 `LayoutParmas`，然后在 `!attchToRoot` 时调用 `setLayoutParams()`，里面会调用 `requestLayout()`进行重新布局
+>
+> 继续往下面看：
+>
+> ![image-20220323230405944](https://gitee.com/guo985892345/typora/raw/master/img/image-20220323230405944.png)
+>
+> 这里在 `root != null && attachToRoot` 时调用 `root.addView()`，这就是使用 `attachToRoot` 的时候
+>
+> 然后在 `addView()` 里面就调用了之前重写的那两个方法：
+>
+> ![image-20220323230713647](https://gitee.com/guo985892345/typora/raw/master/img/image-20220323230713647.png)
+>
+> 这就是 `LayoutInflater` 的简单分析了
+>
+> 之前有学弟问道 `LayoutInflater#inflate()` 与 `View#inflate()` 的区别，查看源码你就会发现其实 `View#inflate()` 就是调用的 `LayoutInflater#inflate()`
+>
+> ![image-20220323231300755](https://gitee.com/guo985892345/typora/raw/master/img/image-20220323231300755.png)
+>
+> 还有学弟问过为什么 Rv 的 `onCreateView()` 使用像下面这样写不行
+>
+> ```java
+> // 其实这个 parent 就是 Rv
+> override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
+>     return MyViewHolder(
+>         // 这种写法就是下面这种写法
+>         View.inflate(parent.context, R.layout.recycler_item, parent)
+>     )
+> }
+> 
+> override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
+>     return MyViewHolder(
+>         LayoutInflater.from(parent.context).inflate(R.layout.recycler_item, parent, true)
+>     )
+> }
+> 
+> // 上面这两种写法使用后会报错：
+> // java.lang.IllegalStateException: 
+> // ViewHolder views must not be attached when created. 
+> // Ensure that you are not passing 'true' to the attachToRoot parameter 
+> // of LayoutInflater.inflate(..., boolean attachToRoot)
+> // 意思就是只能在 ViewHolder 开始使用时才能把 View 添加到 parent 中去
+> ```
+>
+> 可能部分有人这样写过，发现 item 的布局无法设置大小，这个问题跟前面讲到的 dialog 根布局宽高失效有点类似
+>
+> ```java
+> override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
+>     return MyViewHolder(
+>         // 第二个参数传入 null
+>         LayoutInflater.from(parent.context).inflate(R.layout.recycler_item, null)
+>     )
+> }
+> ```
+>
+> 第二个参数传入 null 时，按照前面分析的流程，就不会给根布局设置 `LayoutParams`，那么在 Rv `addView()`时，会调用 Rv 的 `generateDefaultLayoutParams()` ，最后调用到 `LayoutManger` 的 `generateDefaultLayoutParams()`
+>
+> ![image-20220323234144858](https://gitee.com/guo985892345/typora/raw/master/img/image-20220323234144858.png)
+>
+> 如果是 `LinearLayoutManger`，就直接设置成 `wrap_content` 了，所以在 xml 中写的宽和高根本就没有去读取
+>
+> ![image-20220323234305639](https://gitee.com/guo985892345/typora/raw/master/img/image-20220323234305639.png)
 
 ### 11、发布开源库
 
 ### 12、分享一些东西
 
-> 谁想写自定义 View 啊，你想写吗？正经人写什么自定义 View。
->
-> 自定义 View 确实很难，东西又多又杂，在考虑写自定义 View 之前，请先搜索一下是否有别人已经造好的轮子，有轮子直接用，他不香吗？[狗头]
->
-> 这里分享一些轮子：
->
-
 #### 1、Material Design 官网
 
+> 谁想写自定义 View 啊，你想写吗？正经人写什么自定义 View。
+>
+> 自定义 View 确实很难，东西又多又杂，在考虑写自定义 View 之前，请先搜索一下是否有别人已经造好的轮子，有轮子直接用，他不香吗？[狗头]，Material Design 官网就包含许多官方轮子
+>
 > 官网链接：https://material.io/
 >
 > 源码地址：https://github.com/material-components/material-components-android
@@ -1831,7 +2264,11 @@
 >
 > 这里面的都算官方控件，而且有很多，如果想实现某个功能时可以去看看是否已经有实现了的，他还专门写了一个实例 app，可以下下来看看，找到想要的再去看他的源码
 
-#### 2、View#post()、posyDelay()
+#### 2、View#post()、posyDelay()、postOnAnimation()
+
+> 得到 View 的宽和高
+>
+> postDelay() 可能会内存泄漏
 
 #### 3、View 的生命周期
 
@@ -1840,5 +2277,21 @@
 > 如何监听 View 被 remove
 
 #### 4、自定义 View 的一些规范
+
+> 应该尽量解耦
+>
+> 可以使用分离一些职责出来
+
+#### 5、布局调试软件
+
+> Android 调试利器 Pandora
+>
+> https://www.wanandroid.com/blog/show/2183
+
+#### 6、Rv 怎么得到某个 item  的实例
+
+> 这不算自定义 View 的内容，因为寒假时有很多学弟遇到了这个问题，我这里讲解一下吧
+>
+> 得到里面的 item 更建议使用在不需要保持状态的情况下，比如某个 item 的变动需要加载动画，那就可以使用这种方法
 
 ## 二、动画

@@ -1,6 +1,7 @@
 package com.ndhzs.lib.section7
 
 import android.content.Context
+import android.graphics.Canvas
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
@@ -32,5 +33,9 @@ class MySection7FlTestView @JvmOverloads constructor(
             return
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
     }
 }
