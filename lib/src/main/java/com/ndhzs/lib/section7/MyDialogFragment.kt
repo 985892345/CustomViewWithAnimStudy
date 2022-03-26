@@ -1,5 +1,6 @@
 package com.ndhzs.lib.section7
 
+import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,7 +22,7 @@ class MyDialogFragment : DialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return LayoutInflater.from(requireContext()).inflate(R.layout.layout_section7, container, false)
+        return inflater.inflate(R.layout.layout_section7, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

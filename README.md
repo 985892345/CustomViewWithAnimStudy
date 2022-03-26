@@ -177,8 +177,8 @@
 >
 > ```xml
 > <style name="MyAppTheme" parent="Theme.MaterialComponents">
->     <!--下面这个 @style/MyCardView 就是前面写的 <style name="MyCardView">-->
->     <item name="cardViewStyle">@style/myCardView_style</item>
+>  <!--下面这个 @style/MyCardView 就是前面写的 <style name="MyCardView">-->
+>  <item name="cardViewStyle">@style/myCardView_style</item>
 > </style>
 > ```
 >
@@ -188,18 +188,18 @@
 > ```java
 > // 原因在于 CardView 的构造函数
 > public CardView(
->  @NonNull Context context, 
->  @Nullable AttributeSet attrs
+> @NonNull Context context, 
+> @Nullable AttributeSet attrs
 > ) {
->  this(context, attrs, R.attr.cardViewStyle);
+> this(context, attrs, R.attr.cardViewStyle);
 > }
 > 
 > public CardView(
->  @NonNull Context context, 
->  @Nullable AttributeSet attrs, 
->  int defStyleAttr
+> @NonNull Context context, 
+> @Nullable AttributeSet attrs, 
+> int defStyleAttr
 > ) {
->  super(context, attrs, defStyleAttr);
+> super(context, attrs, defStyleAttr);
 > }
 > ```
 >
@@ -207,7 +207,7 @@
 >
 > ```xml
 > <resources>
->  <attr format="reference" name="cardViewStyle"/>
+> <attr format="reference" name="cardViewStyle"/>
 > </resources>
 > ```
 >
@@ -227,7 +227,7 @@
 >   </application>
 >   ```
 >
-> - 某个 Activity 引用，当前 ACtivity 内使用该配置
+> - 某个 Activity 引用，当前 Activity 内使用该配置
 >
 >   ```xml
 >   <activity
@@ -258,14 +258,14 @@
 >
 > 看到这里你可能有点晕，我们简单梳理一下流程：
 >
-> ```flow
-> read=>start: 系统读取你写的 xml
-> new=>operation: 生成 AttributeSet，然后调用两个参数的构造函数
-> first=>operation: 两个参数的调用三个参数的，并传入 R.attr.cardViewStyle
-> second=>operation: View 开始从 theme 中读取属性
-> third=>operation: View 在 theme 中发现 <item name="cardViewStyle">@style/myCardView_style</item> 的定义
-> fourth=>end: 读取 @style/MyCardView 里面的属性
-> read->new->first->second->third->fourth
+> ```mermaid
+> graph TB
+> id1("系统读取你写的 xml")-->id2
+> id2["生成 AttributeSet，然后调用两个参数的构造函数"]-->id3
+> id3["两个参数的调用三个参数的，并传入 R.attr.cardViewStyle"]-->id4
+> id4["View 开始从 theme 中读取属性"]-->id5
+> id5["View 在 theme 中发现 name=cardViewStyle>xxxx< 的定义"]-->id6
+> id6("读取 @style/MyCardView 里面的属性")
 > ```
 >
 > 
@@ -563,7 +563,7 @@
 > >
 > > > 怎么看 kt 转成的 java 代码？
 > > >
-> > >  <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320161207313.png" alt="image-20220320161207313" style="zoom:50%;" />
+> > >  <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220320161207313.png" alt="image-20220320161207313" style="zoom:50%;" />
 > > >
 > > >  <img src="C:/Users/%E9%83%AD%E7%A5%A5%E7%91%9E/AppData/Roaming/Typora/typora-user-images/image-20220320144121673.png" alt="image-20220320144121673" style="zoom:50%;" />
 > >
@@ -600,13 +600,13 @@
 >
 > 接下来，我们看一下效果：
 >
-> <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320144833039.png" alt="image-20220320144833039" style="zoom:50%;float:left" />
+> <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220320144833039.png" alt="image-20220320144833039" style="zoom:50%;float:left" />
 >
 > 如果你没有自定义 View 基础的话，可能会觉得有些奇怪
 >
 > 我们从小学开始学的坐标系第一象限不是向上为 Y 正半轴，向右为 X 正半轴，那么按照惯性思维，(0, 0) - (100, 200) 为什么不是下图这样的？
 >
-> <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320144833039.png" alt="image-20220320144833039" style="zoom:50%;transform:rotateX(180deg);float:left" />
+> <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220320144833039.png" alt="image-20220320144833039" style="zoom:50%;transform:rotateX(180deg);float:left" />
 >
 > 其实原因在于 View 中坐标系的 y 轴是反过来的，我猜测是因为：为了设配手机的特点，比如我们看一些列表，都是手指往上滑动，查看下面的内容，所以为了好开发，View 中的坐标原点就设置在了左上角，向下为 Y 正半轴，向右为 X 正半轴
 >
@@ -747,7 +747,7 @@
 >
 > 
 >
-> <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320163052101.png" alt="image-20220320163052101" style="zoom:50%;float:left" />
+> <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220320163052101.png" alt="image-20220320163052101" style="zoom:50%;float:left" />
 >
 > 好家伙，它竟然把图绘制到标题栏上了，这里猜测原因如下（没有去查看源码找真正原因）：
 >
@@ -759,7 +759,7 @@
 >
 > > 你把开发者模式模式的 `显示布局边界` 给打开，你会看到下面这种图：
 > >
-> > <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320164459116.png" alt="image-20220320164459116" style="zoom: 67%;float:left" />
+> > <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220320164459116.png" alt="image-20220320164459116" style="zoom: 67%;float:left" />
 > >
 > > 这里说明标题栏的文字是一个 View 来显示的
 > >
@@ -770,7 +770,7 @@
 > > <style name="xxx" parent="Theme.MaterialComponents.DayNight.NoActionBar">
 > > ```
 > >
-> > <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320164844556.png" alt="image-20220320164844556" style="zoom: 67%;float:left" />
+> > <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220320164844556.png" alt="image-20220320164844556" style="zoom: 67%;float:left" />
 > >
 > > 嘿，去掉标题栏后绘制的位置对了，所以这里我提出猜测：标题栏是在最后进行绘制的
 > >
@@ -790,7 +790,7 @@
 > >  android:layout_height="match_parent"/>
 > > ```
 > >
-> > <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320165148269.png" alt="image-20220320165148269" style="zoom: 67%;float:left" />
+> > <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220320165148269.png" alt="image-20220320165148269" style="zoom: 67%;float:left" />
 > >
 > > 果然，我的猜测应该是合理的
 
@@ -916,7 +916,7 @@
 > > </attr>
 > > ```
 > >
-> > <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220320195658810.png" alt="image-20220320195658810" style="zoom:50%;float:left" />
+> > <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220320195658810.png" alt="image-20220320195658810" style="zoom:50%;float:left" />
 > >
 > > 设置后在使用时它的属性就只能选择你填写的那几个
 >
@@ -1244,7 +1244,7 @@
 >
 > 然后在 xml 中写得时候，AS 会进行智能提示
 >
-> <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220321194906364.png" alt="image-20220321194906364" style="zoom:67%;" />
+> <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220321194906364.png" alt="image-20220321194906364" style="zoom:67%;" />
 >
 > 那怎么获取这个属性呢？
 >
@@ -1481,7 +1481,9 @@
 >
 > 如果你以后开发自定义 ViewGroup，在给子 View 测量时我更推荐使用该方法，遵循官方的写法可以提高可读性
 
-##### 1、FrameLayout 的 `onMeasure() 源码分析`
+#### 3、onMeasure() 源码相关分析
+
+##### 1、FrameLayout 的 onMeasure() 源码分析
 
 > ```java
 > // 接下来是起飞环节
@@ -1618,7 +1620,7 @@
 >
 > ##### 首先从 NestedScrollView 的 onMeasure() 开始 debug
 >
-> > ![image-20220321225743926](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321225743926.png)
+> > ![image-20220321225743926](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220321225743926.png)
 > >
 > > 可以发现 NestedScrollView 把测量直接交给了父类 FrameLayout 处理，（你可能会疑惑，不重写 `onMeasure()` 那 NestedScrollView 是怎么实现不同于其他 View 测量的？这个问题在下面会讲解）
 > >
@@ -1626,15 +1628,15 @@
 >
 > ##### 来到 FrameLayout 的 onMeasure() 实现
 >
-> > ![image-20220321230004519](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321230004519.png)
+> > ![image-20220321230004519](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220321230004519.png)
 > >
 > > 这里只有一个 View，就是 Rv，然后 FrameLayout 调用了 `measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0)`，这个函数被 NestedScrollView 重写了，然后给出了一个 `MeasureSpec.UNSPECIFIED`，这就是 NestedScrollView 不同于其他 View 测量的原因
 > >
-> > ![image-20220321230432739](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321230432739.png)
+> > ![image-20220321230432739](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220321230432739.png)
 > >
 > > 仔细看红线处，这里它给出的高度竟然直接为 `lp.topMargin + lp.bottomMargin`，可能你不会意识到这个有什么问题，我们来看看 NestedScrollView 的孪生兄弟 ScrollView 对于该方法的实现
 > >
-> > ![image-20220321230936516](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321230936516.png)
+> > ![image-20220321230936516](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220321230936516.png)
 > >
 > > 发现不同了吗，ScrollView 有个 `parentHeightMeasureSpec` 的高度，而 NestedScrollView 只使用了 `lp.topMargin + lp.bottomMargin`，如果子 View 没得 margin 值，那不就直接给子 View 传入的高度为 0 了？
 > >
@@ -1644,31 +1646,31 @@
 >
 > > 紧接着上面继续 debug，我们来到了 Rv 的 `onMeasure()` 实现
 > >
-> > ![image-20220321231555746](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321231555746.png)
+> > ![image-20220321231555746](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220321231555746.png)
 > >
 > > 可以发现这里 `heightSpec` 为 0
 >
 > ##### 来到 dispatchLayoutStep2() 方法
 >
-> > ![image-20220321231735164](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321231735164.png)
+> > ![image-20220321231735164](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220321231735164.png)
 > >
 > > 前面那个 `dispatchLayoutStrp1()` 因为不处于 `State.STEP_START` 而跳过了
 >
 > ##### 发现 mLayout.onLayoutChildren()
 >
-> > ![image-20220321232502431](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321232502431.png)
+> > ![image-20220321232502431](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220321232502431.png)
 > >
 > > 整个 `dispatchLayoutChild2()` 一看就只有这个方法是用于布局的，debug 进去试试
 >
 > ##### 探索 onLayoutChild() 方法
 >
-> > ![image-20220321233030377](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321233030377.png)
+> > ![image-20220321233030377](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220321233030377.png)
 > >
 > > 前面有一堆方法，但其实 Rv 是调用这个 `fill()` 来给子 View 布局的
 >
 > ##### 探索 fill()
 >
-> > ![image-20220321233713916](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321233713916.png)
+> > ![image-20220321233713916](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220321233713916.png)
 > >
 > > 这个 while 很重要，就是依靠这个循环来测量子 View 的，虽然你应该看的很懵逼，但请记住这两个东西：
 > >
@@ -1678,13 +1680,13 @@
 > >
 > > 很懵逼是不是，我们来看看如果使用 ScrollView 包裹运行到这里时会怎么样？
 > >
-> > ![image-20220321234733578](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321234733578.png)
+> > ![image-20220321234733578](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220321234733578.png)
 > >
 > > 看到区别了吧，使用 ScrollView 时会不一样，其中 `layoutState.mInfinite = false` 和 `remainingSpace = 1868` 
 > >
 > > 如果使用 ScrollView 继续往下走
 > >
-> > ![image-20220321234928364](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321234928364.png)
+> > ![image-20220321234928364](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220321234928364.png)
 > >
 > > 他会在这个地方减少 `remainingSpace` 的值，最后就可以使 while 循环提前退出了
 >
@@ -1694,35 +1696,35 @@
 >
 > ##### 为什么 layoutState.mInfinite = true ?
 >
-> > ![image-20220321235408579](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321235408579.png)
+> > ![image-20220321235408579](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220321235408579.png)
 > >
 > > 点击 `layoutState.mInfinite`，我们可以发现 `mLayoutState.mInfinite` 在这里被赋值
 > >
 > > 点进去看看它赋的什么值
 > >
-> > ![image-20220321235709470](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321235709470.png)
+> > ![image-20220321235709470](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220321235709470.png)
 > >
 > > 第一个 `getMode() == View.MeasureSpec.UNSPECIFIED` 肯定是 `true`，因为外布局是 NestedScrollView 嘛，前面提到了它重写了 FrameLayout 的 `measureChildWithMargins()` 方法，给的子 View 的测量模式是 `MeasureSpec.UNSPECIFIED` ，第二个判断 `mOrientationHelper.getEnd() == 0`，根据 debug 可以得到值也为 `true`
 > >
 > > 继续跟踪 `mOrientationHelper.getEnd() == 0` 的原因
 > >
-> > ![image-20220322000124439](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322000124439.png)
+> > ![image-20220322000124439](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322000124439.png)
 > >
 > > 可以发现它直接调用了 `mLayoutManger.getHeight()`，继续
 > >
-> > ![image-20220322000411111](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322000411111.png)
+> > ![image-20220322000411111](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322000411111.png)
 > >
 > > `mHeight` 被修改的地方如下
 > >
-> > ![image-20220322000630000](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322000630000.png)
+> > ![image-20220322000630000](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322000630000.png)
 > >
 > > 其中前面两个是 `setRecyclerView()` 是在 Rv 添加 Adapter 时设置的初始值，肯定不是我们要找的地方，那只能是 `setMeasureSpecs()` 了
 > >
-> > ![image-20220322000826091](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322000826091.png)
+> > ![image-20220322000826091](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322000826091.png)
 > >
 > > 这里有一个 `mHeight = 0` 的操作，点击方法名称看看是谁调用了它
 > >
-> > ![image-20220322000941813](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322000941813.png)
+> > ![image-20220322000941813](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322000941813.png)
 > >
 > > 运气真好，刚好回到了我们之前大的断点前，那只能说明就是在这里调用的，所以 `mHeight = 0`，导致前面的 `mOrientationHelper.getEnd() == 0` 为 `true`，最后导致 `layoutState.mInfinite` 为 `true` 了 
 >
@@ -1732,25 +1734,25 @@
 > >
 > > 先来到这里
 > >
-> > ![image-20220322001506870](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322001506870.png)
+> > ![image-20220322001506870](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322001506870.png)
 > >
 > > 我们可以知道 `remainingSpace` 由 `layoutState.mAvailable + layoutState.mExtraFillSpace` 组成，其中通过查看注释可以知道跟 `layoutState.mExtraFillSpace` 没有关系，那就去寻找 `layoutState.mAvailable` 吧
 > >
 > > 可是 `layoutState.mAvailable` 被改变的地方有点多，不是很好定位，那我们可以试试给这个变量打上断点，重新走一下流程，接下来就是重新 debug 一遍
 > >
-> > ![image-20220322002054498](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322002054498.png)
+> > ![image-20220322002054498](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322002054498.png)
 > >
 > > 一下子就找到了，不得不说 debug 确实很方便
 > >
 > > 点击去看一下 `mOrientationHelper.getEndAfterPadding()` 方法
 > >
-> > ![image-20220322002252433](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322002252433.png)
+> > ![image-20220322002252433](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322002252433.png)
 > >
 > > 果然，跟最开始的猜测一样，它与 `mHeight` 有关系
 > >
 > > 那 `updateLayoutStateToFillEnd()` 是在什么时候调用的呢？
 > >
-> > ![image-20220322002424079](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322002424079.png)
+> > ![image-20220322002424079](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322002424079.png)
 > >
 > > 从调用栈发现原来他在 `fill()` 方法前被调用了
 > >
@@ -1816,7 +1818,7 @@
 > >
 > > 它对应这个属性：
 > >
-> > ![image-20220322003418726](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322003418726.png)
+> > ![image-20220322003418726](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322003418726.png)
 > >
 > > 但再次之前我们先看一下，设置为 `true` 后 `onMeasure()` 干了些什么东西
 > >
@@ -1875,7 +1877,7 @@
 > >
 > > 首先，我们知道失效的决定因素是 `mHeight == 0 && mode == MeasureSpec.UNSPECIFIED`，而 NestedScrollView 在子 View 没有设置 Margin 值时给子 View 传入的高度肯定是 0
 > >
-> > ![image-20220321230936516](https://gitee.com/guo985892345/typora/raw/master/img/image-20220321230936516.png)
+> > ![image-20220321230936516](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220321230936516.png)
 > >
 > > 而 `MeasureSpec.UNSPECIFIED` 测量模式具有传递性，前面我们提到 `getChildMeasureSpec()` 方法（[MeasureSpecs](#2、MeasureSpecs)）
 > >
@@ -1907,7 +1909,7 @@
 >
 > - 只有 DialogFragment 才会使外层布局的所有 `layout_` 属性失效，而 Dialog 则**一般**不会
 >
-> 其实也不是一般不会，主要是 DialogFragment 和 Dialog 在一个方法使用上的不同，所以为什么我最开始给那位学弟讲的<img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220322180055610.png" alt="image-20220322180055610" style="zoom: 50%;" />
+> 其实也不是一般不会，主要是 DialogFragment 和 Dialog 在一个方法使用上的不同，所以为什么我最开始给那位学弟讲的<img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322180055610.png" alt="image-20220322180055610" style="zoom: 50%;" />
 >
 > 原来是我以为 dialog 能设置，那 DialogFragment 也能设置了，原来 DialogFragment 设置是失效的
 >
@@ -1919,21 +1921,21 @@
 >
 > DialogFragment 是一个 Fragment，里面夹带了一个 dialog，根据 Fragment 常见的写法，先给 `onCreateView()` 打上 debug
 >
-> ![image-20220322175441660](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322175441660.png)
+> ![image-20220326185016280](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220326185016280.png)
 >
 > debug 进来发现一堆方法，但如果不了解这些东西的话，确实很难知道它把这个返回的 View 拿来干了什么，其实当时我在给那位学弟找这个问题答案的时候找了很久，最后是从 `View#setLayoutParams()` 方法入手，在一堆调用栈中发现了答案。这里为了省时间就直接按正向流程讲一遍吧
 >
-> ![image-20220322180533094](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322180533094.png)
+> ![image-20220322180533094](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322180533094.png)
 >
 > 这里它有一个 `LiveData` 通知观察者
 >
-> ![image-20220322180809792](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322180809792.png)
+> ![image-20220322180809792](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322180809792.png)
 >
 > DialogFragment 里面对它进行了观察，DialogFragment 是在 `onAttach()` 的时候开始进行观察的，怪不得我按正常流程走了半天也找不到问题 :( 
 >
 > 这里的观察者被通知时调用了 `mDialog.setContentView(view)`，点击它继续往下走
 >
-> ![image-20220322190910124](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322190910124.png)
+> ![image-20220322190910124](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322190910124.png)
 >
 > 可以发现这里它直接传入了自己的 LayoutParams，这就是为什么所有 `layout_` 属性全部失效的原因
 >
@@ -1941,16 +1943,16 @@
 >
 > 主要原因是 dialog 一般是这样写的：
 >
-> ![image-20220322191150701](https://gitee.com/guo985892345/typora/raw/master/img/image-20220322191150701.png)
+> ![image-20220322191150701](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322191150701.png)
 >
-> <img src="https://gitee.com/guo985892345/typora/raw/master/img/image-20220322191527878.png" alt="image-20220322191527878" style="zoom: 50%;" />
+> <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220322191527878.png" alt="image-20220322191527878" style="zoom: 50%;" />
 >
 > 可以看到它调用了
 >
 > ```java
-> mLayoutInflater.inflate(layoutResID, mContentParent);
+>mLayoutInflater.inflate(layoutResID, mContentParent);
 > ```
->
+> 
 > 而不是使用的 `setContenView(View view)`
 >
 > 至于 `LayoutInflater` 会在后面进行讲解，这里你只需要知道调用了这个方法后，它会读取 xml 文件，并把 xml 中写的 `layout_` 属性保存在一个 `LayoutParams` 中供父布局使用，所以这就是 DialogFragment 的 `layout_` 属性不会失效的原因，当然，只是一般不会失效，如果你非要在 dialog 中调用 `setContentView(View view)`，那肯定也是一样会失效的
@@ -1964,7 +1966,7 @@
 > ##### 2、通过代码设置宽和高
 >
 > > 可以设置根布局的宽和高
-> >
+>>
 > > ```java
 > > // 只有在 onViewCreated() 回调里设置才有效
 > > override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -1995,7 +1997,7 @@
 > > ```
 > >
 > > 这个 window 其实是 Android 里的 `PhoneWindow`，听名字就知道是一个管理手机窗口的类，调用这个 `setLayout()` 最后会重新给 `DectorView` 设置 `LayoutParams`，`DectorView` 是所有窗口的根布局
->
+> 
 > 上面两种解决方法我更推荐使用第一种，因为在 xml 中定义属性更好修改，不然在代码中修改宽和高，会给以后看代码的人带来疑惑
 >
 > ##### 
@@ -2037,7 +2039,7 @@
 >
 >   为什么需要在这里重写设置呢？
 >
->   原因：`onLayout()` 一般情况下**只会回调一次**，而且能拿到最终显示的宽度和高度，所以在有特殊需要时可以在这里面来设置一些东西，比如：一些特殊的自定义 ViewGroup 始终是固定的大小，则可以不用重写 `onMeasure()`，而是在 `onLayout()` 中直接布局
+>   原因：`onLayout()` 能拿到最终显示的宽度和高度，且一般情况下只会调用一次，所以在有特殊需要时可以在这里面来设置一些东西，比如：一些特殊的自定义 ViewGroup 始终是固定的大小，则可以不用重写 `onMeasure()`，而是在 `onLayout()` 中直接给子 View 调用 `measure()`、`layout()` 布局
 >
 > ```mermaid
 > graph LR
@@ -2157,7 +2159,7 @@
 
 > debug 走起，最后发现它调用了
 >
-> ![image-20220323223301814](https://gitee.com/guo985892345/typora/raw/master/img/image-20220323223301814.png)
+> ![image-20220323223301814](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220323223301814.png)
 >
 > 添加布局直接交给了 `LayoutInflater` 处理，那我们讲解一下 `LayoutInflater`
 
@@ -2182,25 +2184,25 @@
 >
 > 继续往里面走，其中最主要的代码在这里：
 >
-> ![image-20220323224318637](https://gitee.com/guo985892345/typora/raw/master/img/image-20220323224318637.png)
+> ![image-20220323224318637](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220323224318637.png)
 >
 > 上面那个就是之前留下的问题（[LayoutParams](#1、LayoutParams)），在 `root != null` 通过 `AttributeSet` 得到你自己的 `LayoutParmas`，然后在 `!attchToRoot` 时调用 `setLayoutParams()`，里面会调用 `requestLayout()`进行重新布局
 >
 > 继续往下面看：
 >
-> ![image-20220323230405944](https://gitee.com/guo985892345/typora/raw/master/img/image-20220323230405944.png)
+> ![image-20220323230405944](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220323230405944.png)
 >
 > 这里在 `root != null && attachToRoot` 时调用 `root.addView()`，这就是使用 `attachToRoot` 的时候
 >
 > 然后在 `addView()` 里面就调用了之前重写的那两个方法：
 >
-> ![image-20220323230713647](https://gitee.com/guo985892345/typora/raw/master/img/image-20220323230713647.png)
+> ![image-20220323230713647](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220323230713647.png)
 >
 > 这就是 `LayoutInflater` 的简单分析了
 >
 > 之前有学弟问道 `LayoutInflater#inflate()` 与 `View#inflate()` 的区别，查看源码你就会发现其实 `View#inflate()` 就是调用的 `LayoutInflater#inflate()`
 >
-> ![image-20220323231300755](https://gitee.com/guo985892345/typora/raw/master/img/image-20220323231300755.png)
+> ![image-20220323231300755](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220323231300755.png)
 >
 > 还有学弟问过为什么 Rv 的 `onCreateView()` 使用像下面这样写不行
 >
@@ -2240,13 +2242,333 @@
 >
 > 第二个参数传入 null 时，按照前面分析的流程，就不会给根布局设置 `LayoutParams`，那么在 Rv `addView()`时，会调用 Rv 的 `generateDefaultLayoutParams()` ，最后调用到 `LayoutManger` 的 `generateDefaultLayoutParams()`
 >
-> ![image-20220323234144858](https://gitee.com/guo985892345/typora/raw/master/img/image-20220323234144858.png)
+> ![image-20220323234144858](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220323234144858.png)
 >
 > 如果是 `LinearLayoutManger`，就直接设置成 `wrap_content` 了，所以在 xml 中写的宽和高根本就没有去读取
 >
-> ![image-20220323234305639](https://gitee.com/guo985892345/typora/raw/master/img/image-20220323234305639.png)
+> ![image-20220323234305639](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220323234305639.png)
 
 ### 11、发布开源库
+
+#### 1、创建模块
+
+> 大型项目都会采用多模块开发，每个人只需要负责自己的模块，模块方面的知识我就不讲解了，这里主要是讲解如何创建自定义 View 的模块
+>
+> 首先 new 一个模块
+>
+> ![image-20220325141248013](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220325141248013.png)
+>
+> 然后选着对应的模块
+>
+> ![image-20220325141438062](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220325141438062.png)
+>
+> > 这里简单讲一下：
+> >
+> > 第一个 `Phone & Tablet` 也是创建模块，其实与这个 `Android Library` 主要是在 `build.gradle` 上的细微不同
+> >
+> > ##### 1、Phone & Tablet
+> >
+> > ```groovy
+> > plugins {
+> >     id 'com.android.application'
+> > }
+> > 
+> > android {
+> >     defaultConfig {
+> >     	applicationId "com.ndhzs.myapplication"
+> >     	minSdk 21
+> > 		targetSdk 31
+> >     	versionCode 1
+> > 	    versionName "1.0"
+> >     }
+> > }
+> > ```
+> >
+> > ##### 2、Android Library
+> >
+> > ```groovy
+> > plugins {
+> >     id 'com.android.library'
+> > }
+> > 
+> > android {
+> >     defaultConfig {
+> >     	minSdk 21
+> > 		targetSdk 31
+> >     }
+> > }
+> > ```
+> >
+> > 不同之处主要就是上面两处，其他还有 `AndroidManifest.xml` 都是差不多的
+>
+> 创建好的模块会少 res 文件夹，自己新建即可，其他地方用法就跟平常写法都一样
+>
+> 在你的 app 模块中使用下面这种写法就可以刚建的模块
+>
+> ```groovy
+> dependencies {
+> 	implementation project(':lib')
+> }
+> ```
+>
+> 模块下也是允许再建子模块的，模块化需要学习 gradle 相关的知识，等你们进来接手掌邮了多看几个模块就无师自通了（透漏一下新消息，目前强神还在更新整个掌邮的 gradle，已经重构为 kts 了，估计等你们进来就可以体验协程了）
+
+#### 2、发布到 jitPack
+
+> 很多时候发布到开源库方便我们在其他项目中引用，接下来我们将讲解如何发布到 `jitPack`，为什么不发布到 `Maven Central`，因为 `Maven Central` 要申请文件，很麻烦，而 `jitPack` 直接傻瓜式操作一步到位
+>
+> ```groovy
+> // 在 lib 的 build.gradle 中
+> plugins {
+> 	id 'maven-publish'
+> }
+> 
+> android {
+> 	publishing {
+> 		singleVariant "release"
+> 	}
+> }
+> 
+> afterEvaluate {
+> 	publishing {
+> 		publications {
+> 			release(MavenPublication) {
+> 				from components.release
+> 			}
+> 		}
+> 	}
+> }
+> ```
+>
+> **注意是在 lib 的 build.gradle 中，不是在 app 的 build.gradle**
+>
+> > **这里是原因的讲解，不想看的话可以跳过**
+> >
+> > 这是我摸索出来的**最新教程**，如果你去那些看那些博客，全是过时教程，这里给出摸索的过程：
+> >
+> > - 发布开源库的教程先根据 `jitPack` 官网来：https://docs.jitpack.io/android/
+> >
+> > - 然后看它官网给出的源码示例：https://github.com/jitpack/android-example/blob/master/library/build.gradle
+> >
+> > - 再参考谷歌给的示例：https://developer.android.google.cn/studio/build/maven-publish-plugin
+> >
+> > - 最后看看 gradle 官网每个方法的意思：
+> >
+> >   https://docs.gradle.org/current/userguide/publishing_maven.html#publishing_maven:tasks
+> >
+> >   https://docs.gradle.org/current/dsl/org.gradle.api.publish.maven.MavenPublication.html#org.gradle.api.publish.maven.MavenPublication
+> >
+> > 
+> >
+> > 这样基本上能实现了，但在打包时会报一个警告：
+> >
+> > ```
+> > WARNING:Software Components will not be created automatically for Maven publishing from Android Gradle Plugin 8.0. To opt-in to the future behavior, set the Gradle property 
+> > ```
+> >
+> > 最后上 stackoverflow 寻找（因为其他地方找不到）：
+> >
+> > https://stackoverflow.com/questions/71365373/software-components-will-not-be-created-automatically-for-maven-publishing-from
+> >
+> > 最最后在谷歌找到方法：
+> >
+> > https://developer.android.google.cn/studio/publish-library/configure-pub-variants
+> >
+> > https://developer.android.google.cn/reference/tools/gradle-api/7.1/com/android/build/api/dsl/LibraryPublishing
+> >
+> > 这里简单讲一下：
+> >
+> > ```groovy
+> > android {
+> > 	publishing {
+> >          // 这个是会自动创建下面 publications 中的同名方法
+> > 		singleVariant "release"
+> > 
+> >          // 比如这个就是下面那个 myRelease(MavenPublication)
+> >          // singleVariant "myRelease"
+> > 	}
+> > 
+> >     // 这是官方默认自带的东西，就与对不同的包定义不同的设置
+> >     buildTypes {
+> >         release {
+> >         }
+> >     }
+> > }
+> > 
+> > afterEvaluate {
+> > 	publishing {
+> > 		publications {
+> > 			release(MavenPublication) {
+> >                  // 这个 components.release 中的 release 是 buildTypes 中的 release
+> > 				from components.release
+> > 			}
+> > 
+> >              // 这里这个 myRelease 就对应于上面写的那个 singleVariant "myRelease"
+> >              // myRelease(MavenPublication) {
+> > 			//     from components.release
+> > 			// }
+> > 		}
+> > 	}
+> > }
+> > ```
+> >
+> > 如果实在看不懂的话就直接按照刚开始给出的抄上去即可，毕竟看懂需要有一定的 gradle 基础
+>
+> 然后在 github 上发一个 Releases
+>
+> ![image-20220325133455931](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220325133455931.png)
+>
+> Release 发布好了后，打开 `jitPack` 
+>
+> ![image-20220325133728477](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220325133728477.png)
+>
+> 这样一个正式包就成功发布出去了，引入的话下面有教程
+>
+> ![image-20220325134213260](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220325134213260.png)
+>
+> > 小插曲：由于 gradle 到 7.0.0 版本以后，引入改位置了
+> >
+> > ```groovy
+> > // 在 settings.gradle 里
+> > dependencyResolutionManagement {
+> >  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+> >  repositories {
+> >      google()
+> >      mavenCentral()
+> >      maven { url = "https://jitpack.io" }
+> >  }
+> > }
+> > ```
+>
+> 如果是自己平时开发中用到，每次都发 Releases 显得过于麻烦，`jitPack` 可以发布快照版本，何为快照，看完下面的教程你就懂了
+>
+> ![image-20220325135853586](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220325135853586.png)
+>
+> 你会发现下面给出的引入写法没有带版本号
+>
+> ![image-20220325135808864](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220325135808864.png)
+>
+> 这个 `SNAPSHOP` 就是快照的标识，带有快照的版本号在 build 时会自动去检查是否是最新版，以后只需要提交到 main 分支，然后发个快照版本就可以升级了
+>
+> 只有自己使用时更推荐发布快照
+
+#### 3、发布到阿里的 Maven
+
+> 就在要上课的昨天，艾神来问我怎么发布阿里的 Maven，他掉进坑里卡了一个晚上，于是我去试着解决了一下
+>
+> 果然够坑的，因为 gradle 升到 7.0.0 以后把一个插件给移除了，而阿里官网和其他教程都是过时的，花了一些时间才搞出来，这里就直接给最新的操作教程
+>
+> 首先，去阿里官网注册一下（好像是免费的）：https://packages.aliyun.com/maven
+>
+> 注册过后，他会给你两个仓库：
+>
+> ![image-20220326231305660](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220326231305660.png)
+>
+> 一个是用于发布稳定版的库，一个是发布快照版的库，上面 `jitPack` 中也介绍了快照
+>
+> 然后找到这个指南界面
+>
+> ![image-20220326231921252](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220326231921252.png)
+>
+> 这里面有一些基础设置，但这教程过时了，下面我给出最新的写法：
+>
+> ```groovy
+> // settings.gradle
+> dependencyResolutionManagement {
+>     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+>     repositories {
+>         google()
+>         mavenCentral()
+>         // 这里添加阿里 maven 的仓库地址
+>         maven {
+>             url 'https://maven.aliyun.com/repository/public'
+>         }
+>     }
+> }
+> ```
+>
+> ```groovy
+> // 这是单独写的一个 maven.gradle
+> 
+> // gradle 7之前使用的 maven 插件，7之后只能使用 maven-publish 了
+> apply plugin: 'maven-publish'
+> // 这个是引用我的密码等私密文件，建议把这些单独放在一个文件夹里，并在.gitignore上添加它
+> apply from: "${rootDir}/secret.gradle"
+> 
+> afterEvaluate {
+>     publishing {
+>         publications {
+>             release(MavenPublication) {
+>                 from components.release
+>                 // 版本号，如果末尾加上 -SNAPSHOT 说明是快照版本
+>                 version = '0.0.1-SNAPSHOT'
+>                 // 项目名称，通常为类库模块名称，也可以任意设置
+>                 artifactId = 'example'
+>                 // 唯一标识，通常为模块包名，也可以任意设置
+>                 groupId = 'com.985892345'
+>             }
+>         }
+> 
+>         // 这下面的 aliMavenUsername、aliMavenPassword、releaseUrl、snapshotUrl
+>         // 对应你自己的，在阿里官网那个指南里有
+>         repositories {
+>             maven {
+>                 credentials {
+>                     username aliMavenUsername
+>                     password aliMavenPassword
+>                 }
+>                 url releaseUrl
+>             }
+>             maven {
+>                 credentials {
+>                     username aliMavenUsername
+>                     password aliMavenPassword
+>                 }
+>                 url snapshotUrl
+>             }
+>         }
+>     }
+> }
+> ```
+>
+> ```groovy
+> // secret.gradle
+> // 这个没学过 gradle 的话可能看不懂，这里不会讲解，你只管这样写就可以
+> ext.aliMavenUsername = "你的账号"
+> ext.aliMavenPassword = "你的密码"
+> ext.releaseUrl = "你的稳定版本发布地址"
+> ext.snapshotUrl = "你的快照版本发布地址"
+> ```
+>
+> ```groovy
+> // 在你要发布的项目里的 build.gradle
+> apply from: "maven.gradle"
+> 
+> android {
+>     // 这个东西在之前 jitPack 讲过，这里就不再讲了
+>     publishing {
+>         singleVariant "release"
+>     }
+> }
+> ```
+>
+> **注意：**通常你要发布的项目是一个 `library`，而不是一个 `application`，因为一般 `library` 才是给别人使用的，而 `application` 是一个项目的入口，通常来依赖 `library`
+>
+> OK，这样就配置完了，刷新一下 gradle，再点击右上角的 gradle 标志
+>
+> ![image-20220326234300251](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220326234300251.png)
+>
+> 点击这个就可以直接运行发布到 maven 的 task
+>
+> <img src="D:/Typora/img/image-20220326234410761.png" alt="image-20220326234410761" style="zoom: 67%;" />
+>
+> > 可能你们有些人找不到这个选项，因为新版的 AS 把这个默认关闭了，我也搞不懂为啥，为了让大家使用命令行运行任务？
+> >
+> > 在这里进行设置，就能看得到了
+> >
+> > ![image-20220326234634838](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220326234634838.png)
+> >
+> > 
 
 ### 12、分享一些东西
 
@@ -2264,27 +2586,227 @@
 >
 > 这里面的都算官方控件，而且有很多，如果想实现某个功能时可以去看看是否已经有实现了的，他还专门写了一个实例 app，可以下下来看看，找到想要的再去看他的源码
 
+#### 2、MotionLayout
+
+> 这东西我都还没怎么深入学习，可以去看看掘金上的一些教程，这里我就不讲了 ）
+>
+> 官网：https://developer.android.google.cn/training/constraint-layout/motionlayout/examples?hl=zh_cn
+
 #### 2、View#post()、posyDelay()、postOnAnimation()
 
-> 得到 View 的宽和高
+> ##### 面试题：
 >
-> postDelay() 可能会内存泄漏
+> 如何在 `onCreate()` 中得到 View 的宽和高？
+>
+> 哈哈，这不是有手就行？
+>
+> ```kotlin
+> override fun onCreate(savedInstanceState: Bundle?) {
+> 	super.onCreate(savedInstanceState)
+> 	setContentView(com.ndhzs.lib.R.layout.layout_section7)
+>         
+> 	val view = findViewById<View>(com.ndhzs.lib.R.id.myView7)
+> 	val width = view.width
+> 	val height = view.height
+> }
+> ```
+>
+> 然后面试官笑了笑，你就被刷了
+>
+> 原因：这种写法得到的宽和高结果是 0
+>
+> 为什么呢？
+>
+> 因为前面我们讲到，`View#width` 和 `View#height` 是在 `onLayout()` 中设置的，而 `onCreate()` 此时还没有开始布局，只是调用了 `setContentView()` 加载了布局，三大流程还没有开始走，真正开始走三大流程是在 `onResume()` 后，这里提供下面几种正确方法：
+>
+> > ##### 1、post()
+> >
+> > ```kotlin
+> > val view = findViewById<View>(com.ndhzs.lib.R.id.myView7)
+> > view.post {
+> >     val width = view.width
+> >     val height = view.height
+> > }
+> > ```
+> >
+> > 原理：post 是用 Handler 发一个 Message，而 View 对于自带的 post 做了特殊处理，只会在 View 被测量后才开始发 Message
+> >
+> > ##### 2、doOnLayout
+> >
+> > ```kotlin
+> > val view = findViewById<View>(com.ndhzs.lib.R.id.myView7)
+> > view.doOnLayout {
+> >     val width = view.width
+> >     val height = view.height
+> > }
+> > ```
+> >
+> > 原理：使用 View 的一个 `addOnLayoutChangeListener()` 方法，监听 View 的 `onLayout()` 回调
+>
+> ##### 再来个面试题：
+>
+> View 的 `post()` 原理是什么？`postDelayed()` 会造成内存泄漏吗？如果会该怎么处理？
+>
+> 答案：
+>
+> 1、View 的 `post()` 在没有添加到屏幕前会先保存 Runnable 在第一次 `performTraversals` 到来时执行，如果已经添加屏幕上，就直接交给 `mAttachInfo` 的 `mHanlder` 执行，至于这个 `mHandler`，是 `ViewRootImpl` 持有的一个 `ViewRootHandler` 对象
+>
+> 2、`postDelayed()` 会造成内存泄漏，因为它没主动删除你发送的 Runnable（其实 `post()` 理论上也会造成内存泄漏，但因为时间极短，约等于不泄漏）
+>
+> 3、处理的话，可以在重写 View 的 `onDetachedFromWindow()` 方法主动取消，或者封装一下成单独的一个类，使用 `addOnAttachStateChangeListener()` 专门来发 `postDelayed()`
+>
+> > 如果面试官真的刁难你，可能还会问 `View#post()` 在不同版本上的实现 (
+> >
+> > 这个你们自己看文章吧：https://juejin.cn/post/6844903521804877832
+> >
+> > 还有如何检测内存泄漏，这个还是得提一下，不然不提的话，可能都不会有人知道
+> >
+> > 直接使用：LeakCanary  https://github.com/square/leakcanary
+> >
+> > 用法很简单，只需一行代码即可
+> >
+> > ```groovy
+> > dependencies {
+> >   // debugImplementation because LeakCanary should only run in debug builds.
+> >   debugImplementation 'com.squareup.leakcanary:leakcanary-android:xxx'
+> > }
+> > ```
+> >
+> > 然后它会自己生成一个多余的图标，在你应用出现内存泄漏时弹窗提醒
+> >
+> > ![image-20220325155039418](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220325155039418.png)
+> >
+> > 内存泄露也是面试的点（
+>
+> ##### 最后一个面试题
+>
+> `postOnAnimation()` 是什么？通常用于什么时候？
+>
+> 不要被 Animation 迷惑了，认为这个是用来发送动画的，如果要讲这个，我们先从官方常用的一个方法讲起，如果你经常看官方控件源码，你会发现下面这个东西常出现
+>
+> ```java
+> ViewCompat.postOnAnimation()
+> ```
+>
+> 如果你去看一遍它的注释，就很容易理解了，就是将 Runnable 在手机的下一帧执行（前面说过刷新率 60 的手机每帧相隔 16 毫秒），而这个方法内部在 SDK 16 及以上就是调用的 `View#postOnAnimation()`
+>
+> 那这个方法的使用场景如何呢？
+>
+> 它常用于代替 `ValueAnimator` 动画（`ValueAnimator` 这类动画与 `View#postOnAnimation()` 内部实现是一样的），比如在 Rv 的惯性滑动中就会用到这个 `ViewCompat.postOnAnimation()`（下次事件分发时才讲）
+>
+> 所以你会经常看见这样使用：
+>
+> ```java
+> private Runnable mRunnable = new Runnable() {
+> 	@Override
+> 	public void run() {
+> 		// ......
+> 		ViewCompat.postOnAnimation(View.this, this)
+>          // 平时开发可以直接使用 View.postOnAnimation(View.this, this)
+> 	}
+> }
+> // 这样就形成了一种隐式的递归，在每次屏幕刷新时调用 run()
+> ```
+>
+> 
 
 #### 3、View 的生命周期
 
-> 生命周期
+> View 也有什么周期，但 View 的生命周期很不完善
 >
-> 如何监听 View 被 remove
+> ```mermaid
+> graph TB
+> id1("构造函数（对应 onCreate()）")-->id2
+> id2["onFinishInflate()（对应 onCreate() 中的 setContentView()）"]-->id3
+> id3["onAttachedToWindow()"]-->id4
+> id4["onWindowVisbilityChanged()"]-->id5
+> id5["onMeasure()"]-->id6
+> id6["onLayout()"]-->id7
+> id7["onDraw()"]-->id8
+> id8["onWindowFocusChanged()"]-->id9
+> id9["onWindowVisibilityChanged()"]-->id10
+> id10["onDetachedFromWindow()"]
+> ```
+>
+> ##### onFinishInflate()
+>
+>  从 xml 中完全加载完时的回调
+>
+> ##### onAttachedToWindow()
+>
+> 开始显示在屏幕上时的回调
+>
+> ##### onWindowVisbilityChanged()
+>
+> 窗口可见性改变的回调
+>
+> ##### onWindowFocusChanged()
+>
+> 窗口获取焦点时的回调
+>
+> ##### onDetachedFromWindow()
+>
+> View 不显示在屏幕上时的回调
+>
+> 其他的看看这篇文章吧：https://www.jianshu.com/p/0a4cb44ce9d1
+>
+> 可以看到其实 View 的生命周期不是很完善，甚至连自身什么时候被添加进 ViewGroup 都没有方法回调，remove 也是一样，但如果想实现 addView 和 removeView 监听的话，查看源码后发现只能使用 `ViewGroup#setOnHierarchyChangeListener()`，意思是在 View 中通过给 parent 设置监听，但这个有个缺点，就是只能设置一次监听
 
 #### 4、自定义 View 的一些规范
 
-> 应该尽量解耦
+> - 应该尽量解耦，View 里面不建议包含 `网络请求`、`Rxjavaj`、`EventBus`、`Lifecycle 相关组件` 等，这些应该是主语应用层使用的，而不是在 View 里面使用，View 里面应该尽量使用 MVC 的模式来写
+> - 可以分离一些职责出来，比如课表我就把事件和绘制通过设置监听的方式来分离，这样可以方便扩展，而不是全部塞在 View 里面
 >
-> 可以使用分离一些职责出来
+> ##### 分离 Draw 事件
+>
+> ```kotlin
+> // 自定义绘图的监听
+> private val mItemDecoration = ArrayList<ItemDecoration>(5)
+> 
+> final override fun dispatchDraw(canvas: Canvas) {
+>     mItemDecoration.forEach {
+>         it.onDrawBelow(canvas, this)
+>     }
+>     super.dispatchDraw(canvas)
+>     mItemDecoration.forEach {
+>         it.onDrawAbove(canvas, this)
+>     }
+> }
+> 
+> /**
+>  * 该类主要用于实现一些简单的绘图处理
+>  *
+>  * 经过我的思考，我认为不应该提供删除的方法，原因如下：
+>  * - 一般不会有需要中途删除的情况
+>  * - 很容易出现事件在遍历中就把它删除，导致出现遍历越位的错误
+>  *
+>  * 设计参考了 RV 的 ItemDecoration
+>  * @author 985892345 (Guo Xiangrui)
+>  * @email 2767465918@qq.com
+>  * @date 2022/1/27
+>  */
+> interface ItemDecoration {
+>     /**
+>      * 在所有子 View 的 onDraw() 前的回调，在这里面绘图可以绘制在子 View 下方
+>      */
+>     fun onDrawBelow(canvas: Canvas, view: View) { }
+> 
+>     /**
+>      * 在所有子 View 的 onDraw() 后的回调，在这里面绘图可以绘制在子 View 上方
+>      */
+>     fun onDrawAbove(canvas: Canvas, view: View) { }
+> }
+> ```
+>
+> 还有分离事件分发，我就留到下次课来讲了
+>
+> 
 
 #### 5、布局调试软件
 
 > Android 调试利器 Pandora
+>
+> 一个很牛逼的 debug 工具，可以在手机上查看布局属性、网络请求、sp 等很多东西
 >
 > https://www.wanandroid.com/blog/show/2183
 
@@ -2293,5 +2815,132 @@
 > 这不算自定义 View 的内容，因为寒假时有很多学弟遇到了这个问题，我这里讲解一下吧
 >
 > 得到里面的 item 更建议使用在不需要保持状态的情况下，比如某个 item 的变动需要加载动画，那就可以使用这种方法
+>
+> ```kotlin
+> class RvAdapter : RecyclerView.Adapter<RvAdapter.RvVH>() {
+>  class RvVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
+>      val mAnimationView: AnimationView = itemView.findViewById(R.id.item_animation)
+>  }
+> 
+>  fun getVHolder(position: Int, call: VHolderCallback) {
+>      // 调用两个参数的这个刷新
+>      notifyItemChanged(position, call)
+>  }
+> 
+>  override fun onCreateViewHolder(
+>      parent: ViewGroup, 
+>      viewType: Int
+>  ): RvVH {
+>      return RvVH(
+>          LayoutInflater
+>          	.from(parent.context)
+>          	.inflate(R.layout.layout_item, parent, false)
+>      )
+>  }
+> 
+>  // 重写三个参数的这个方法
+>  override fun onBindViewHolder(
+>      holder: RvVH, 
+>      position: Int, 
+>      payloads: MutableList<Any>
+>  ) {
+>      if (payloads.isEmpty()) {
+>          super.onBindViewHolder(holder, position, payloads)
+>      } else {
+>          // 这里得到 payloads 就是之前刷新传入的回调
+>          // 因为是在下一帧才会刷新，期间可能会调用多次刷新 item，所以是一个 List
+>          payloads.forEach {
+>              if (it is VHolderCallback) {
+>                  it.call(holder)
+>              }
+>          }
+>      }
+>  }
+> 
+>  override fun onBindViewHolder(holder: RvVH, position: Int) {
+>  }
+> 
+>  override fun getItemCount(): Int = 100
+> 
+>  fun interface VHolderCallback {
+>      fun call(holder: RvVH)
+>  }
+> }
+> ```
+>
+> 使用方式就是调用 `getVHolder()` 就可以了
+>
+> ```kotlin
+> getVHolder(1) {
+>  // 开始动画
+>  it.mAnimationView.startAnim()
+> }
+> ```
+>
+> **注意：**
+>
+> - 这种方法在回调时不能进行延迟保存返回的 holder 对象，因为它只是目前状态下的 holder，不能保证刷新后仍是这个
+>
+> - 这里面对 View 的设置都是暂时的，所以最开始我就说了用来调用一下动画才能使用这种方法，如果想永久保存建议：
+>
+>   - 改变传入 Rv 的数据集合，
+>   - 或者调用 `ViewHolder#setIsRecyclable(false)`，但要记得在之后还原，不然这个 ViewHolder 就不会被回收
+>
+> - 这种情况下会失效：
+>
+>   ```kotlin
+>   getVHolder(1) {
+>       // 开始动画
+>       it.setIsRecyclable(false)
+>       it.mAnimationView.startAnim()
+>   }
+>   // 后面调用这个进行普通刷新，只要出现了这个，前面的特殊刷新都会失效
+>   notifyItemChanged(1)
+>   ```
+>
+> 对于差分刷新也有一个与 payload 相关的方法
+>
+> ```kotlin
+> // 这个是 ItemCallback，但与 DiffUtil.Callback 是差不多的
+> object : DiffUtil.ItemCallback<ICourseVpBean>() {
+>     override fun areItemsTheSame(
+>         oldItem: ICourseVpBean,
+>         newItem: ICourseVpBean
+>     ): Boolean {
+>         return oldItem.week == newItem.week
+>     }
+> 
+>     override fun areContentsTheSame(
+>         oldItem: ICourseVpBean,
+>         newItem: ICourseVpBean
+>     ): Boolean {
+>         return oldItem == newItem
+>     }
+> 
+>     // 就这个方法，建议重写并不返回
+>     override fun getChangePayload(
+>         oldItem: ICourseVpBean, 
+>         newItem: ICourseVpBean
+>     ): Any {
+>         return "" // 只要不为 null 就可以在刷新时去掉与缓存的互换，减少性能的消耗
+>     }
+> }
+> ```
 
 ## 二、动画
+
+> 动画这东西建议看《Android自定义控件开发入门与实战》和下面这网址，我这里就不进行讲解了
+>
+> https://qijian.blog.csdn.net/article/details/50995268
+>
+> 本节课主要讲元素共享动画
+>
+> 因为时间关系写不了了（这课件确实把我写累了），这里给出一些网址：
+>
+> - https://juejin.cn/post/6844903727015395336
+>
+>   > 这个主要写了 activity 之间的元素共享，例子较全
+>
+> - https://blog.csdn.net/qq_29425853/article/details/53104919
+>
+>   

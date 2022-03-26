@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 rootProject.name = "CustomViewWithAnim-Study"
 include ':app'
 include ':lib'
+include ':myapplication'
