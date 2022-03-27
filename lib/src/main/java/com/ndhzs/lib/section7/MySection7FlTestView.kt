@@ -25,7 +25,7 @@ class MySection7FlTestView @JvmOverloads constructor(
         if (wMode == MeasureSpec.AT_MOST) {
             super.onMeasure(
                 // 别忘了，这里填的 400 单位是 px
-                MeasureSpec.makeMeasureSpec(400, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(200, MeasureSpec.EXACTLY),
                 heightMeasureSpec
             )
 //            Log.d("ggg", "(MySection7FlTestView.kt:32)-->> " +

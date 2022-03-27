@@ -631,7 +631,7 @@
 > }
 > ```
 >
-> Paint 的方法有很多，这里给出文章，你们有时间可以去看看，那本自定义黑书对于 Paint 的内容有点少，建议去看书作者写的文章，里面有很多其他高级用法
+> Paint 的方法有很多，这里给出文章，你们有时间可以去看看，那本自定义View黑书对于 Paint 的内容有点少，建议去看书作者写的文章，里面有很多其他高级用法
 >
 > - https://qijian.blog.csdn.net/article/details/50995268
 
@@ -694,7 +694,7 @@
 >  }
 > }
 > 
-> private fun set(func: () -> Unit) {
+> private inline fun set(func: () -> Unit) {
 >  func.invoke()
 > }
 > ```
@@ -1409,7 +1409,7 @@
 > /**
 >  * @param spec 子 View 能得到的 MeasureSpecs，一般是父 View 的测量模式 + 想给出的大小
 >  * @param padding 间距值，一般这样填入：layoutParams.leftMargin + layoutParams.rightMargin
->  * @param childDimension 子 View 的宽或者高，固定填入：child.width 或者 child.height
+>  * @param childDimension 子 View 的宽或者高，固定填入：lp.width 或者 lp.height
 >  */
 > public static int getChildMeasureSpec(int spec, int padding, int childDimension) {
 >     int specMode = MeasureSpec.getMode(spec); // 测量模式
@@ -1561,7 +1561,7 @@
 >                  childState << MEASURED_HEIGHT_STATE_SHIFT));
 > 
 >  // 在上面那个调用过后，就能得到自身的宽和高了
->  // 然后这里再重写测量为 match_parent 的 View
+>  // 然后这里再重新测量为 match_parent 的 View
 >  count = mMatchParentChildren.size();
 >  // 这个 count 判断我个人感觉有点问题
 >  // count 是指为 match_parent View 的数量，
@@ -2000,8 +2000,6 @@
 > 
 > 上面两种解决方法我更推荐使用第一种，因为在 xml 中定义属性更好修改，不然在代码中修改宽和高，会给以后看代码的人带来疑惑
 >
-> ##### 
->
 > OK，`onMeasure()` 基本上就讲到这里了
 >
 > 
@@ -2204,7 +2202,7 @@
 >
 > ![image-20220323231300755](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220323231300755.png)
 >
-> 还有学弟问过为什么 Rv 的 `onCreateView()` 使用像下面这样写不行
+> 还有学弟问过为什么 Rv 的 `onCreateViewHolder()` 使用像下面这样写不行
 >
 > ```java
 > // 其实这个 parent 就是 Rv
@@ -2475,15 +2473,15 @@
 > ```groovy
 > // settings.gradle
 > dependencyResolutionManagement {
->     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
->     repositories {
->         google()
->         mavenCentral()
->         // 这里添加阿里 maven 的仓库地址
->         maven {
->             url 'https://maven.aliyun.com/repository/public'
->         }
->     }
+>  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+>  repositories {
+>      google()
+>      mavenCentral()
+>      // 这里添加阿里 maven 的仓库地址
+>      maven {
+>          url 'https://maven.aliyun.com/repository/public'
+>      }
+>  }
 > }
 > ```
 >
@@ -2496,38 +2494,38 @@
 > apply from: "${rootDir}/secret.gradle"
 > 
 > afterEvaluate {
->     publishing {
->         publications {
->             release(MavenPublication) {
->                 from components.release
->                 // 版本号，如果末尾加上 -SNAPSHOT 说明是快照版本
->                 version = '0.0.1-SNAPSHOT'
->                 // 项目名称，通常为类库模块名称，也可以任意设置
->                 artifactId = 'example'
->                 // 唯一标识，通常为模块包名，也可以任意设置
->                 groupId = 'com.985892345'
->             }
->         }
+>  publishing {
+>      publications {
+>          release(MavenPublication) {
+>              from components.release
+>              // 版本号，如果末尾加上 -SNAPSHOT 说明是快照版本
+>              version = '0.0.1-SNAPSHOT'
+>              // 项目名称，通常为类库模块名称，也可以任意设置
+>              artifactId = 'example'
+>              // 唯一标识，通常为模块包名，也可以任意设置
+>              groupId = 'com.985892345'
+>          }
+>      }
 > 
->         // 这下面的 aliMavenUsername、aliMavenPassword、releaseUrl、snapshotUrl
->         // 对应你自己的，在阿里官网那个指南里有
->         repositories {
->             maven {
->                 credentials {
->                     username aliMavenUsername
->                     password aliMavenPassword
->                 }
->                 url releaseUrl
->             }
->             maven {
->                 credentials {
->                     username aliMavenUsername
->                     password aliMavenPassword
->                 }
->                 url snapshotUrl
->             }
->         }
->     }
+>      // 这下面的 aliMavenUsername、aliMavenPassword、releaseUrl、snapshotUrl
+>      // 对应你自己的，在阿里官网那个指南里有
+>      repositories {
+>          maven {
+>              credentials {
+>                  username aliMavenUsername
+>                  password aliMavenPassword
+>              }
+>              url releaseUrl
+>          }
+>          maven {
+>              credentials {
+>                  username aliMavenUsername
+>                  password aliMavenPassword
+>              }
+>              url snapshotUrl
+>          }
+>      }
+>  }
 > }
 > ```
 >
@@ -2540,15 +2538,21 @@
 > ext.snapshotUrl = "你的快照版本发布地址"
 > ```
 >
+> > 在根目录的 .gitignore 里加上即可防止被上传到 github 仓库
+> >
+> > ```
+> > secret.gradle
+> > ```
+>
 > ```groovy
 > // 在你要发布的项目里的 build.gradle
 > apply from: "maven.gradle"
 > 
 > android {
->     // 这个东西在之前 jitPack 讲过，这里就不再讲了
->     publishing {
->         singleVariant "release"
->     }
+>  // 这个东西在之前 jitPack 讲过，这里就不再讲了
+>  publishing {
+>      singleVariant "release"
+>  }
 > }
 > ```
 >
@@ -2818,53 +2822,53 @@
 >
 > ```kotlin
 > class RvAdapter : RecyclerView.Adapter<RvAdapter.RvVH>() {
->  class RvVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
->      val mAnimationView: AnimationView = itemView.findViewById(R.id.item_animation)
->  }
+> class RvVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
+> val mAnimationView: AnimationView = itemView.findViewById(R.id.item_animation)
+> }
 > 
->  fun getVHolder(position: Int, call: VHolderCallback) {
->      // 调用两个参数的这个刷新
->      notifyItemChanged(position, call)
->  }
+> fun getVHolder(position: Int, call: VHolderCallback) {
+> // 调用两个参数的这个刷新
+> notifyItemChanged(position, call)
+> }
 > 
->  override fun onCreateViewHolder(
->      parent: ViewGroup, 
->      viewType: Int
->  ): RvVH {
->      return RvVH(
->          LayoutInflater
->          	.from(parent.context)
->          	.inflate(R.layout.layout_item, parent, false)
->      )
->  }
+> override fun onCreateViewHolder(
+> parent: ViewGroup, 
+> viewType: Int
+> ): RvVH {
+> return RvVH(
+>    LayoutInflater
+>    	.from(parent.context)
+>    	.inflate(R.layout.layout_item, parent, false)
+> )
+> }
 > 
->  // 重写三个参数的这个方法
->  override fun onBindViewHolder(
->      holder: RvVH, 
->      position: Int, 
->      payloads: MutableList<Any>
->  ) {
->      if (payloads.isEmpty()) {
->          super.onBindViewHolder(holder, position, payloads)
->      } else {
->          // 这里得到 payloads 就是之前刷新传入的回调
->          // 因为是在下一帧才会刷新，期间可能会调用多次刷新 item，所以是一个 List
->          payloads.forEach {
->              if (it is VHolderCallback) {
->                  it.call(holder)
->              }
->          }
->      }
->  }
+> // 重写三个参数的这个方法
+> override fun onBindViewHolder(
+> holder: RvVH, 
+> position: Int, 
+> payloads: MutableList<Any>
+> ) {
+> if (payloads.isEmpty()) {
+>    super.onBindViewHolder(holder, position, payloads)
+> } else {
+>    // 这里得到 payloads 就是之前刷新传入的回调
+>    // 因为是在下一帧才会刷新，期间可能会调用多次刷新 item，所以是一个 List
+>    payloads.forEach {
+>        if (it is VHolderCallback) {
+>            it.call(holder)
+>        }
+>    }
+> }
+> }
 > 
->  override fun onBindViewHolder(holder: RvVH, position: Int) {
->  }
+> override fun onBindViewHolder(holder: RvVH, position: Int) {
+> }
 > 
->  override fun getItemCount(): Int = 100
+> override fun getItemCount(): Int = 100
 > 
->  fun interface VHolderCallback {
->      fun call(holder: RvVH)
->  }
+> fun interface VHolderCallback {
+> fun call(holder: RvVH)
+> }
 > }
 > ```
 >
@@ -2872,8 +2876,8 @@
 >
 > ```kotlin
 > getVHolder(1) {
->  // 开始动画
->  it.mAnimationView.startAnim()
+> // 开始动画
+> it.mAnimationView.startAnim()
 > }
 > ```
 >
@@ -2891,10 +2895,11 @@
 >   ```kotlin
 >   getVHolder(1) {
 >       // 开始动画
->       it.setIsRecyclable(false)
 >       it.mAnimationView.startAnim()
 >   }
 >   // 后面调用这个进行普通刷新，只要出现了这个，前面的特殊刷新都会失效
+>   // 原因是 Rv 是每一帧才刷新，在到达下一帧前调用 notifyItemChanged(1) 
+>   // 会取消前面的所有 notifyItemChanged(position, payload) 刷新
 >   notifyItemChanged(1)
 >   ```
 >
@@ -2917,7 +2922,7 @@
 >         return oldItem == newItem
 >     }
 > 
->     // 就这个方法，建议重写并不返回
+>     // 就这个方法，建议重写并返回不为 null 即可
 >     override fun getChangePayload(
 >         oldItem: ICourseVpBean, 
 >         newItem: ICourseVpBean
@@ -2926,6 +2931,196 @@
 >     }
 > }
 > ```
+
+#### 7、沉浸式状态栏
+
+> 这也不算自定义 View 的内容，但由于沉浸式在不同 Android 版本的写法不同，所以这里我想讲一下最新的写法
+>
+> ```kotlin
+> // 这是目前最新的写法
+> private fun cancelStatusBar() {
+>  val window = this.window
+>  val decorView = window.decorView
+> 
+>  // 这是 Android 做了兼容的 Compat 包
+>  // 下面这个设置后会沉浸式状态栏和导航栏
+>  WindowCompat.setDecorFitsSystemWindows(window, false)
+> 
+>  val windowInsetsController = ViewCompat.getWindowInsetsController(decorView)
+>  // 设置状态栏字体颜色为黑色
+>  windowInsetsController?.isAppearanceLightStatusBars = true 
+>  //把状态栏颜色设置成透明
+>  window.statusBarColor = Color.TRANSPARENT 
+> }
+> ```
+>
+> 设置过后你会界面跑到状态栏和导航栏里面去了
+>
+> <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220327125536813.png" alt="image-20220327125536813" style="zoom: 33%; float: left;" />
+>
+> 这是就需要用到专门用于沉浸式式的一个属性 `android:fitsSystemWindows="true"`，一般我们是把它设置在根布局下
+>
+> **注意**：不同的控件对于 `android:fitsSystemWindows="true"` 属性会有不同的效果
+>
+> ```xml
+> <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+>  xmlns:app="http://schemas.android.com/apk/res-auto"
+>  android:layout_width="match_parent"
+>  android:layout_height="match_parent"
+>  android:fitsSystemWindows="true">
+>  <!--比如设置在这个位置，就会使它下面的子布局偏移状态栏和-->
+> 
+>  <androidx.drawerlayout.widget.DrawerLayout/>
+>      <com.google.android.material.navigation.NavigationView/>
+>  </androidx.drawerlayout.widget.DrawerLayout>
+> </FrameLayout>
+> ```
+>
+> 设置后变成了下图：
+>
+> <img src="D:/Typora/img/image-20220327130020826.png" alt="image-20220327130020826" style="zoom: 33%; float: left;" />
+>
+> 但，有强迫症的我发现了其他问题
+>
+> <img src="D:/Typora/img/image-20220327130159294.png" alt="image-20220327130159294" style="zoom: 33%; float: left;" />
+>
+> 可能你们就得没有什么，但如果要实现下图这种侧边栏，就不是很好看了
+>
+> <img src="D:/Typora/img/image-20220327130328450.png" alt="image-20220327130328450" style="zoom: 33%; float: left;" />
+>
+> 如上图，你胡发现整个界面是完全沉浸式，而要实现这种效果，我们可以试试把 `android:fitsSystemWindows="true"` 属性写在 `DrawerLayout` 中
+>
+> ```xml
+> <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+>     xmlns:app="http://schemas.android.com/apk/res-auto"
+>     android:layout_width="match_parent"
+>     android:layout_height="match_parent">
+> 
+>     <androidx.drawerlayout.widget.DrawerLayout
+>         android:id="@+id/dl"
+>         android:layout_width="match_parent"
+>         android:layout_height="match_parent"
+>         android:fitsSystemWindows="true">
+>         
+>         <!--主页布局-->
+>         <androidx.coordinatorlayout.widget.CoordinatorLayout/>
+>         <!--侧边栏布局-->
+>         <com.google.android.material.navigation.NavigationView/>
+>         
+>     </androidx.drawerlayout.widget.DrawerLayout>
+> </FrameLayout>
+> ```
+>
+> 新的问题有出现了，这个状态栏变成了紫色，这一看就知道 Material 主题的颜色，在为了解决这个颜色，踩了很多坑。首先我们要知道这个颜色来自于哪里，这里就要提到 AS 的布局分析工具
+>
+> ![image-20220327131430073](https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220327131430073.png)
+>
+> 主要是哪个立体展示功能，在使用了后就知道究竟是谁显示的紫色了
+>
+> <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220327131607413.png" alt="image-20220327131607413" style="zoom: 50%;" />
+>
+> 原来是 `DrawerLayout` 自己绘制上的，通过查看源码后发现 `DrawerLayout` 给了一个方法用来设置这个状态栏颜色
+>
+> ```kotlin
+> // DrawerLayout 的状态栏颜色
+> mDrawerLayout.setStatusBarBackgroundColor(Color.TRANSPARENT)
+> ```
+>
+> OK，这个问题算解决了，但又出现了新的问题，侧滑栏出现了灰色蒙层
+>
+> <img src="D:/Typora/img/image-20220327132555512.png" alt="image-20220327132555512" style="zoom:33%;float:left" />
+>
+> 在刘家成学弟的帮助下，在这个 stactoverflow 里找到教程：https://stackoverflow.com/q/53889569
+>
+> ```xml
+> <com.google.android.material.navigation.NavigationView
+>     android:id="@+id/navigationView"
+>     android:layout_width="300dp"
+>     android:layout_height="match_parent"
+>     android:layout_gravity="start"
+>     app:insetForeground="@android:color/transparent">
+>     <!--把这个app:insetForeground属性改成透明就可以了-->
+> 
+> </com.google.android.material.navigation.NavigationView>
+> ```
+>
+> 这里给出最终代码：
+>
+> ```xml
+> <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+>     xmlns:app="http://schemas.android.com/apk/res-auto"
+>     android:layout_width="match_parent"
+>     android:layout_height="match_parent">
+> 
+>     <androidx.drawerlayout.widget.DrawerLayout
+>         android:id="@+id/dl"
+>         android:layout_width="match_parent"
+>         android:layout_height="match_parent"
+>         android:fitsSystemWindows="true">
+>         <!--该fitsSystemWindows属性用于偏移状态栏和导航栏高度-->
+>         <!--fitsSystemWindows给DrawerLayout设置后有两个坑：
+>         1、状态栏会有一个颜色，只能使用方法setStatusBarBackgroundColor修改
+>         2、NavigationView会有一个蒙层，给NavigationView加个insetForeground属性-->
+> 
+>         <androidx.coordinatorlayout.widget.CoordinatorLayout
+>             android:layout_width="match_parent"
+>             android:layout_height="match_parent">
+> 
+>             <androidx.appcompat.widget.Toolbar
+>                 android:layout_width="match_parent"
+>                 android:layout_height="?actionBarSize">
+> 
+>                 <com.google.android.material.tabs.TabLayout
+>                     android:layout_width="wrap_content"
+>                     android:layout_height="wrap_content"
+>                     android:layout_gravity="center"
+>                     app:tabIndicatorColor="@color/colorAppThemeColor"
+>                     app:tabIndicatorFullWidth="false"
+>                     app:tabIndicatorGravity="bottom"
+>                     app:tabMode="auto"
+>                     app:tabPaddingEnd="2dp"
+>                     app:tabPaddingStart="0dp"
+>                     app:tabRippleColor="@color/colorTransparency"
+>                     app:tabSelectedTextColor="@color/colorAppThemeColor"
+>                     app:tabTextAppearance="@style/TextAppearance.AppCompat.Medium"
+>                     app:tabTextColor="@color/colorTextForeground">
+> 
+>                     <com.google.android.material.tabs.TabItem
+>                         android:layout_width="wrap_content"
+>                         android:layout_height="wrap_content"
+>                         android:text="@string/my" />
+> 
+>                     <com.google.android.material.tabs.TabItem
+>                         android:layout_width="wrap_content"
+>                         android:layout_height="wrap_content"
+>                         android:text="@string/square" />
+> 
+>                 </com.google.android.material.tabs.TabLayout>
+>             </androidx.appcompat.widget.Toolbar>
+> 
+>         </androidx.coordinatorlayout.widget.CoordinatorLayout>
+> 
+>         <com.google.android.material.navigation.NavigationView
+>             android:id="@+id/navigationView"
+>             android:layout_width="300dp"
+>             android:layout_height="match_parent"
+>             android:layout_gravity="start"
+>             app:insetForeground="@android:color/transparent">
+> 
+>         </com.google.android.material.navigation.NavigationView>
+> 
+>     </androidx.drawerlayout.widget.DrawerLayout>
+> </FrameLayout>
+> ```
+>
+> > 如果你足够细致的话，可以发现每次应用在开启时都会显示状态栏颜色，然后突然消失，比较影响体验，这个问题只需要在 theme 中设置就可以了
+> >
+> > ```xml
+> > <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+> >     <!--把主题中的状态栏属性改成透明即可，原理就是最上面讲的 View 的构造器-->
+> >     <item name="android:statusBarColor" tools:targetApi="l">@android:color/transparent</item>
+> > </style>
+> > ```
 
 ## 二、动画
 
@@ -2940,7 +3135,11 @@
 > - https://juejin.cn/post/6844903727015395336
 >
 >   > 这个主要写了 activity 之间的元素共享，例子较全
+>   >
+>   > 由于原项目的版本很旧，我这里把它移到项目里了
+>   >
+>   > <img src="D:/Typora/img/image-20220327133812068.png" alt="image-20220327133812068" style="zoom:50%;float:left" />
 >
 > - https://blog.csdn.net/qq_29425853/article/details/53104919
 >
->   
+> 

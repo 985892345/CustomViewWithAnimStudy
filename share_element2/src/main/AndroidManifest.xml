@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.ndhzs.share_element2">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".base.MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".one.TransitionActivity1"
+            android:theme="@style/MaterialAnimations.Red">
+        </activity>
+        <activity
+            android:name=".one.TransitionActivity2"
+            android:theme="@style/MaterialAnimations.Red">
+        </activity>
+        <activity
+            android:name=".one.TransitionActivity3"
+            android:theme="@style/MaterialAnimations.Red">
+        </activity>
+        <activity
+            android:name=".two.SharedElementActivity"
+            android:theme="@style/MaterialAnimations.Blue">
+        </activity>
+        <activity
+            android:name=".three.AnimationsActivity1"
+            android:theme="@style/MaterialAnimations.Green">
+        </activity>
+        <activity android:name=".three.AnimationsActivity2"/>
+        <activity
+            android:name=".four.RevealActivity"
+            android:theme="@style/MaterialAnimations.Yellow">
+        </activity>
+    </application>
+</manifest>

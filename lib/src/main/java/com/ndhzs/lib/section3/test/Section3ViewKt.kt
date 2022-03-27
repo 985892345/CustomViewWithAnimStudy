@@ -17,4 +17,6 @@ class Section3ViewKt @JvmOverloads constructor(
     defStyleAttr: Int = R.attr.mySection3View_attrs,
     defStyleRes: Int = 0
 ) : View(context, attrs, defStyleAttr, defStyleRes) {
+    fun main() {
+    }
 }
