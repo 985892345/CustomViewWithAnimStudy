@@ -2978,15 +2978,15 @@
 >
 > 设置后变成了下图：
 >
-> <img src="D:/Typora/img/image-20220327130020826.png" alt="image-20220327130020826" style="zoom: 33%; float: left;" />
+> <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220327130020826.png" alt="image-20220327130020826" style="zoom: 33%; float: left;" />
 >
 > 但，有强迫症的我发现了其他问题
 >
-> <img src="D:/Typora/img/image-20220327130159294.png" alt="image-20220327130159294" style="zoom: 33%; float: left;" />
+> <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220327130159294.png" alt="image-20220327130159294" style="zoom: 33%; float: left;" />
 >
 > 可能你们就得没有什么，但如果要实现下图这种侧边栏，就不是很好看了
 >
-> <img src="D:/Typora/img/image-20220327130328450.png" alt="image-20220327130328450" style="zoom: 33%; float: left;" />
+> <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220327130328450.png" alt="image-20220327130328450" style="zoom: 33%; float: left;" />
 >
 > 如上图，你胡发现整个界面是完全沉浸式，而要实现这种效果，我们可以试试把 `android:fitsSystemWindows="true"` 属性写在 `DrawerLayout` 中
 >
@@ -3028,7 +3028,7 @@
 >
 > OK，这个问题算解决了，但又出现了新的问题，侧滑栏出现了灰色蒙层
 >
-> <img src="D:/Typora/img/image-20220327132555512.png" alt="image-20220327132555512" style="zoom:33%;float:left" />
+> <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220327132555512.png" alt="image-20220327132555512" style="zoom:33%;float:left" />
 >
 > 在刘家成学弟的帮助下，在这个 stactoverflow 里找到教程：https://stackoverflow.com/q/53889569
 >
@@ -3138,7 +3138,7 @@
 >   >
 >   > 由于原项目的版本很旧，我这里把它移到项目里了
 >   >
->   > <img src="D:/Typora/img/image-20220327133812068.png" alt="image-20220327133812068" style="zoom:50%;float:left" />
+>   > <img src="https://img-1307243988.cos.ap-chengdu.myqcloud.com/typora/image-20220327133812068.png" alt="image-20220327133812068" style="zoom:50%;float:left" />
 >
 > - https://blog.csdn.net/qq_29425853/article/details/53104919
 >
